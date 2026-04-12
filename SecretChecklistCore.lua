@@ -980,30 +980,39 @@ do
 		if SC.CheckForNewCollections then SC:CheckForNewCollections() end
 	end)
 
-	-- Housing catalog loads asynchronously; using the generic diff-based snapshot
-	-- for housing causes false-positive "Secret Collected!" toasts on every login
-	-- (the catalog returns quantity=0 at snapshot time, then loads correctly and
-	-- looks like a missing->collected transition).
-	-- Instead: silently re-snapshot housing when catalog data is ready, and fire
-	-- alerts directly on acquisition events.
-	--
-	-- HOUSING_CATALOG_CATEGORY_UPDATED fires per-category as the catalog loads.
-	-- We only use it for UI redraw; we must NOT run CheckHousingCollections here
-	-- because ownership hasn't merged yet and would snapshot entries as "missing".
+	-- Housing catalog loads asynchronously and storage data (ownership) is only
+	-- populated after the housing catalog UI has been opened. Until then,
+	-- entrySubtype=1 is ambiguous: it means both "genuinely unowned" AND
+	-- "storage not loaded yet". To prevent UI flicker on zone transitions
+	-- (where the catalog reloads and subtype briefly returns 1 before storage
+	-- re-merges), we track a ready flag:
+	--   false = catalog is rebuilding, storage may not be merged yet
+	--   true  = HOUSING_STORAGE_UPDATED has fired, ownership data is current
+	-- CheckEntry uses this to treat subtype=1+not-ready as nil (unknown)
+	-- rather than false (missing), stopping the flicker.
+	SC._housingStorageReady = false
+
+	-- HOUSING_CATALOG_CATEGORY_UPDATED fires per-category during async load.
+	-- Mark storage as not-ready so CheckEntry withholds judgement on subtype=1
+	-- until ownership data confirms it. UI redraw is still scheduled so the
+	-- display updates once storage catches up.
 	local housingCatalogFrame = CreateFrame("Frame")
 	housingCatalogFrame:RegisterEvent("HOUSING_CATALOG_CATEGORY_UPDATED")
 	housingCatalogFrame:SetScript("OnEvent", function()
+		SC._housingStorageReady = false
 		ScheduleCollectionRefresh()
 	end)
 
-	-- HOUSING_STORAGE_UPDATED fires on bulk storage refresh (e.g. zone transitions).
+	-- HOUSING_STORAGE_UPDATED fires once the full storage state is ready.
 	-- HOUSING_STORAGE_ENTRY_UPDATED fires on individual ownership changes.
-	-- HOUSE_DECOR_ADDED_TO_CHEST fires on loot. All three confirmed to exist in-game.
+	-- HOUSE_DECOR_ADDED_TO_CHEST fires on loot.
+	-- All three confirmed to exist in-game.
 	local housingFrame = CreateFrame("Frame")
 	housingFrame:RegisterEvent("HOUSING_STORAGE_UPDATED")
 	housingFrame:RegisterEvent("HOUSING_STORAGE_ENTRY_UPDATED")
 	housingFrame:RegisterEvent("HOUSE_DECOR_ADDED_TO_CHEST")
 	housingFrame:SetScript("OnEvent", function()
+		SC._housingStorageReady = true
 		ScheduleCollectionRefresh()
 		if SC.CheckHousingCollections then SC:CheckHousingCollections() end
 	end)

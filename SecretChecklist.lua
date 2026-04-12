@@ -309,11 +309,17 @@ function SC:CheckEntry(entry)
 		end
 		-- Use entrySubtype as the authoritative ownership signal.
 		-- Enum.HousingCatalogEntrySubtype: 0=Invalid, 1=Unowned, 2=OwnedModifiedStack, 3=OwnedUnmodifiedStack
-		-- subtype 0 or nil means the ownership layer hasn't merged yet — return nil so
-		-- the alert system treats this as "unknown" and won't snapshot it as missing.
+		-- subtype 0/nil = ownership layer not merged yet → nil (unknown).
+		-- subtype 1 is ambiguous: "genuinely unowned" OR "storage not loaded yet".
+		-- Guard with _housingStorageReady: if storage hasn't confirmed it's loaded
+		-- this session, return nil rather than false to avoid UI flicker on zone
+		-- transitions where storage briefly clears before reloading.
 		local subtype = info.entryID and info.entryID.entrySubtype
 		if not subtype or subtype == 0 then
 			return nil, "Housing catalog data not loaded yet."
+		end
+		if subtype == 1 and not SC._housingStorageReady then
+			return nil, "Housing storage not loaded yet."
 		end
 		return (subtype ~= 1), "housing"
 	end
