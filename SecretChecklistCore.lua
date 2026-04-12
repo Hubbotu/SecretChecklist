@@ -947,6 +947,10 @@ if frame then
 	CreateOptionsPanel()
 end
 
+-- Trigger housing storage load proactively. Declared here (file-level local)
+-- so it is visible both inside the collection-events do block (where it is
+-- defined) and in the PLAYER_ENTERING_WORLD block below.
+local TriggerHousingStorageLoad
 -- Refresh overview buttons and About model when collection data finishes loading.
 -- Fixes first-open stale display caused by lazy-loaded mount/pet/toy journals.
 do
@@ -1018,10 +1022,11 @@ do
 	end)
 
 	-- Proactively trigger housing storage load via CreateCatalogSearcher().RunSearch().
-	-- Storage is lazy-loaded (only populated when housing catalog UI opens). This
-	-- function is called on login and on every PLAYER_ENTERING_WORLD (instance exit)
+	-- Storage is lazy-loaded (only populated when housing catalog UI opens). Called on
+	-- every PLAYER_ENTERING_WORLD (covers login + all zone transitions / instance exits)
 	-- so the item shows as collected without requiring the player to open housing UI.
-	SC.TriggerHousingStorageLoad = function()
+	TriggerHousingStorageLoad = function()
+		if not (C_HousingCatalog and C_HousingCatalog.CreateCatalogSearcher) then return end
 		local ok, searcher = pcall(C_HousingCatalog.CreateCatalogSearcher)
 		if ok and searcher then
 			pcall(function()
@@ -1084,30 +1089,16 @@ do
 		C_Timer.After(5, function()
 			if SC.BuildAlertSnapshot then SC:BuildAlertSnapshot() end
 		end)
-		-- Housing storage is lazy-loaded: it only populates when the housing
-		-- catalog UI is opened. GetCatalogEntryInfoByItem(id, true) returns
-		-- subtype=1 (Unowned) until then, even for owned items.
-		-- Proactively trigger storage load via CreateCatalogSearcher().RunSearch()
-		-- (the same technique ATT uses). When storage finishes loading,
-		-- HOUSING_STORAGE_UPDATED fires and sets _housingStorageReady = true.
-		-- Also called on PLAYER_ENTERING_WORLD to re-trigger after instance exits
-		-- (housing storage is unloaded inside BG/raid/dungeon and only reloads
-		-- on exit — HOUSING_STORAGE_UPDATED fires once per context load).
-		if C_HousingCatalog and C_HousingCatalog.CreateCatalogSearcher then
-			C_Timer.After(3, SC.TriggerHousingStorageLoad)
-		end
 		self:UnregisterEvent("PLAYER_LOGIN")
 	end)
 end
 
--- Re-trigger housing storage load on every zone transition so that storage
--- reloads correctly after leaving instances (BG/raid/dungeon), not just on login.
+-- Trigger housing storage load on every zone entry (login + instance exits).
+-- PLAYER_ENTERING_WORLD fires for all of these, making a separate login call redundant.
 do
 	local zoneFrame = CreateFrame("Frame")
 	zoneFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 	zoneFrame:SetScript("OnEvent", function()
-		if C_HousingCatalog and C_HousingCatalog.CreateCatalogSearcher then
-			C_Timer.After(3, SC.TriggerHousingStorageLoad)
-		end
+		C_Timer.After(3, TriggerHousingStorageLoad)
 	end)
 end
