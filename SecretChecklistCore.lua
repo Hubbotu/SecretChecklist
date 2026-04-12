@@ -1017,6 +1017,20 @@ do
 		if SC.CheckHousingCollections then SC:CheckHousingCollections() end
 	end)
 
+	-- Proactively trigger housing storage load via CreateCatalogSearcher().RunSearch().
+	-- Storage is lazy-loaded (only populated when housing catalog UI opens). This
+	-- function is called on login and on every PLAYER_ENTERING_WORLD (instance exit)
+	-- so the item shows as collected without requiring the player to open housing UI.
+	SC.TriggerHousingStorageLoad = function()
+		local ok, searcher = pcall(C_HousingCatalog.CreateCatalogSearcher)
+		if ok and searcher then
+			pcall(function()
+				searcher:SetAutoUpdateOnParamChanges(false)
+				searcher:RunSearch()
+			end)
+		end
+	end
+
 	-- Refresh step/substep item counts when bag contents change or when the bank
 	-- is opened for the first time in a session (GetItemCount only returns bank
 	-- data after BANKFRAME_OPENED has fired at least once).
@@ -1076,17 +1090,24 @@ do
 		-- Proactively trigger storage load via CreateCatalogSearcher().RunSearch()
 		-- (the same technique ATT uses). When storage finishes loading,
 		-- HOUSING_STORAGE_UPDATED fires and sets _housingStorageReady = true.
+		-- Also called on PLAYER_ENTERING_WORLD to re-trigger after instance exits
+		-- (housing storage is unloaded inside BG/raid/dungeon and only reloads
+		-- on exit — HOUSING_STORAGE_UPDATED fires once per context load).
 		if C_HousingCatalog and C_HousingCatalog.CreateCatalogSearcher then
-			C_Timer.After(3, function()
-				local ok, searcher = pcall(C_HousingCatalog.CreateCatalogSearcher)
-				if ok and searcher then
-					pcall(function()
-						searcher:SetAutoUpdateOnParamChanges(false)
-						searcher:RunSearch()
-					end)
-				end
-			end)
+			C_Timer.After(3, SC.TriggerHousingStorageLoad)
 		end
 		self:UnregisterEvent("PLAYER_LOGIN")
+	end)
+end
+
+-- Re-trigger housing storage load on every zone transition so that storage
+-- reloads correctly after leaving instances (BG/raid/dungeon), not just on login.
+do
+	local zoneFrame = CreateFrame("Frame")
+	zoneFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+	zoneFrame:SetScript("OnEvent", function()
+		if C_HousingCatalog and C_HousingCatalog.CreateCatalogSearcher then
+			C_Timer.After(3, SC.TriggerHousingStorageLoad)
+		end
 	end)
 end
