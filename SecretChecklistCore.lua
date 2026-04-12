@@ -996,14 +996,13 @@ do
 		ScheduleCollectionRefresh()
 	end)
 
-	-- HOUSING_STORAGE_ENTRY_UPDATED fires when a specific entry's ownership changes.
-	-- HOUSE_DECOR_ADDED_TO_CHEST fires on loot. Both are verified to exist in-game.
-	-- HOUSING_STORAGE_UPDATED (bulk) is registered defensively via pcall since its
-	-- existence is unconfirmed — other addons silently swallow the failure.
+	-- HOUSING_STORAGE_UPDATED fires on bulk storage refresh (e.g. zone transitions).
+	-- HOUSING_STORAGE_ENTRY_UPDATED fires on individual ownership changes.
+	-- HOUSE_DECOR_ADDED_TO_CHEST fires on loot. All three confirmed to exist in-game.
 	local housingFrame = CreateFrame("Frame")
+	housingFrame:RegisterEvent("HOUSING_STORAGE_UPDATED")
 	housingFrame:RegisterEvent("HOUSING_STORAGE_ENTRY_UPDATED")
 	housingFrame:RegisterEvent("HOUSE_DECOR_ADDED_TO_CHEST")
-	pcall(function() housingFrame:RegisterEvent("HOUSING_STORAGE_UPDATED") end)
 	housingFrame:SetScript("OnEvent", function()
 		ScheduleCollectionRefresh()
 		if SC.CheckHousingCollections then SC:CheckHousingCollections() end
