@@ -1070,6 +1070,23 @@ do
 		C_Timer.After(5, function()
 			if SC.BuildAlertSnapshot then SC:BuildAlertSnapshot() end
 		end)
+		-- Housing storage is lazy-loaded: it only populates when the housing
+		-- catalog UI is opened. GetCatalogEntryInfoByItem(id, true) returns
+		-- subtype=1 (Unowned) until then, even for owned items.
+		-- Proactively trigger storage load via CreateCatalogSearcher().RunSearch()
+		-- (the same technique ATT uses). When storage finishes loading,
+		-- HOUSING_STORAGE_UPDATED fires and sets _housingStorageReady = true.
+		if C_HousingCatalog and C_HousingCatalog.CreateCatalogSearcher then
+			C_Timer.After(3, function()
+				local ok, searcher = pcall(C_HousingCatalog.CreateCatalogSearcher)
+				if ok and searcher then
+					pcall(function()
+						searcher:SetAutoUpdateOnParamChanges(false)
+						searcher:RunSearch()
+					end)
+				end
+			end)
+		end
 		self:UnregisterEvent("PLAYER_LOGIN")
 	end)
 end
