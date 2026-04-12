@@ -300,8 +300,11 @@ function SC:CheckEntry(entry)
 		if type(entry.itemID) ~= "number" then
 			return nil, "Housing entry missing itemID."
 		end
-		local info = C_HousingCatalog.GetCatalogEntryInfoByItem(entry.itemID, true)
-		if not info then
+		-- pcall guards against Lua errors thrown by the API during catalog reloads
+		-- (e.g. zone transitions), matching the same pattern used by HousingCompanion
+		-- and AllTheThings for robustness.
+		local ok, info = pcall(C_HousingCatalog.GetCatalogEntryInfoByItem, entry.itemID, true)
+		if not ok or not info then
 			return nil, "Housing catalog data not loaded yet."
 		end
 		-- Use entrySubtype as the authoritative ownership signal.
