@@ -986,25 +986,29 @@ do
 	-- looks like a missing->collected transition).
 	-- Instead: silently re-snapshot housing when catalog data is ready, and fire
 	-- alerts directly on acquisition events.
-	-- HOUSING_CATALOG_CATEGORY_UPDATED fires as the catalog loads per-category.
-	-- We only need it to redraw the UI once the data is ready; we must NOT run
-	-- CheckHousingCollections here because ownership hasn't merged yet and would
-	-- snapshot catalog-structure entries as "missing", causing false toasts.
-	local housingCatalogFrame = CreateFrame("Frame")
-	housingCatalogFrame:RegisterEvent("HOUSING_CATALOG_CATEGORY_UPDATED")
-	housingCatalogFrame:SetScript("OnEvent", function()
-		ScheduleCollectionRefresh()
-	end)
-
-	-- HOUSING_STORAGE_ENTRY_UPDATED fires when a specific entry's ownership actually
-	-- changes (acquire/redeem/place). HOUSE_DECOR_ADDED_TO_CHEST fires on loot.
-	-- Both are safe triggers for the alert snapshot diff.
+	--
+	-- HOUSING_CATALOG_UPDATED is the bulk-complete event fired once the full catalog
+	-- (including ownership) is ready. Both HousingCompanion and AllTheThings use this
+	-- event rather than HOUSING_CATALOG_CATEGORY_UPDATED, which fires per-category
+	-- during async load before ownership data has merged — causing entrySubtype to
+	-- briefly return 1 (Unowned) on zone transitions, producing the UI flicker.
+	--
+	-- HOUSING_STORAGE_UPDATED is the bulk storage event fired when the full storage
+	-- state is refreshed (e.g. after returning from a BG/raid). HOUSING_STORAGE_ENTRY_UPDATED
+	-- only fires for individual changes and may not fire during zone-transition reloads.
 	local housingFrame = CreateFrame("Frame")
-	housingFrame:RegisterEvent("HOUSE_DECOR_ADDED_TO_CHEST")
+	housingFrame:RegisterEvent("HOUSING_CATALOG_UPDATED")
+	housingFrame:RegisterEvent("HOUSING_STORAGE_UPDATED")
 	housingFrame:RegisterEvent("HOUSING_STORAGE_ENTRY_UPDATED")
-	housingFrame:SetScript("OnEvent", function()
+	housingFrame:RegisterEvent("HOUSE_DECOR_ADDED_TO_CHEST")
+	housingFrame:SetScript("OnEvent", function(_, event)
 		ScheduleCollectionRefresh()
-		if SC.CheckHousingCollections then SC:CheckHousingCollections() end
+		-- Only run alert-snapshot diff on storage/acquisition events,
+		-- not on pure catalog structure updates (HOUSING_CATALOG_UPDATED)
+		-- to avoid false toasts when catalog reloads without ownership change.
+		if event ~= "HOUSING_CATALOG_UPDATED" then
+			if SC.CheckHousingCollections then SC:CheckHousingCollections() end
+		end
 	end)
 
 	-- Refresh step/substep item counts when bag contents change or when the bank
