@@ -371,6 +371,10 @@ function SC:GetStepStatus(step)
 			return "done"
 		end
 	end
+	if step.criteriaID and step.achievementID and GetAchievementCriteriaInfoByID then
+		local _, _, criteriaCompleted = GetAchievementCriteriaInfoByID(step.achievementID, step.criteriaID)
+		if criteriaCompleted then return "done" end
+	end
 	if step.achievementID then
 		local _, _, _, completed = GetAchievementInfo(step.achievementID)
 		if completed then return "done" end
