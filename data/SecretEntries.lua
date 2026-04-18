@@ -449,7 +449,7 @@ SC.entries = {
 	    { label = "Combine all 4 items — claim Wicker Pup",             itemID = 163497, note = "Combine Bundle of Wicker Sticks + Miniature Stag Skull + Wolf Pup Spine + Spooky Incantation to create the Spooky Bundle of Sticks and unlock Wicker Pup!" },
 	  },
 	},
-	{ name = "Sun Darter Hatchling",                         kind = "pet",   speciesID = 382, itemID = 142223, guideURL = "https://www.wowhead.com/guide/sun-darter-hatchling-secret-pet",
+	{ name = "Sun Darter Hatchling",                         kind = "pet",   mindSeeker = true, speciesID = 382, itemID = 142223, guideURL = "https://www.wowhead.com/guide/sun-darter-hatchling-secret-pet",
 	  steps = {
 	    -- No questIDs exist; itemIDs show yellow "ready" when the item is in bags
 	    { label = "1. Fire Gate – Major Fire Protection Potion",   itemID = 22841, note = "Winterspring, Caverns of Consumption @ 57.2, 13.9 – enter cave; drink Major Fire Protection Potion to pass Fire Barrier; drink all 5 other Major Protection Potions (Arcane/Frost/Holy/Nature/Shadow) to pass the Chaos Barrier", waypoint = { mapID = 12, x = 0.5720, y = 0.1390 } },
@@ -494,7 +494,7 @@ SC.entries = {
 	    { label = "Loot Enlightened Hearthstone from the Ponderer's Portal", itemID = 190196, note = "The portal opens at the south pillar after all 6 players complete the ritual. All nearby players can loot — no sphere required.", waypoint = { mapID = 1970, x = 0.475, y = 0.570 } },
 	  },
 	},
-	{ name = "Cartel Transmorpher",                          kind = "toy",   mindSeeker = true, itemID = 249713, source = "Quest: Someone Like Me\nFaction: Manaforge Vandals",  guideURL = "https://warcraft-secrets.com/guides/xy-trustees-gearglider",
+	{ name = "Cartel Transmorpher",                          kind = "toy",   itemID = 249713, source = "Quest: Someone Like Me\nFaction: Manaforge Vandals",  guideURL = "https://warcraft-secrets.com/guides/xy-trustees-gearglider",
 	  partOf = "Xy Trustee's Gearglider", stepsRef = "Xy Trustee's Gearglider",
 	},
 	{ name = "Tricked-Out Thinking Cap" ,                    kind = "toy",   itemID = 206696,  requiredFor = {"Keys to Incognitro, the Indecipherable Felcycle", "Tobias' Leash"},  guideURL = "https://www.wowhead.com/guide/world-events/secrets-of-azeroth",
@@ -587,7 +587,7 @@ SC.entries = {
 	-- ------------------------------------------------
 	-- TRANSMOG
 	-- ------------------------------------------------
-	{ name = "Ensemble: Fashion of the Fanatic Felcyclist", kind = "transmog", linkedSecret = true, itemID = 246973, questID = 91636,  partOf = "12 Orb Mystery", guideURL = "https://warcraft-secrets.com/guides/incognitro-the-indecipherable-felcycle#Puzzle_12_Dusk_Lily",
+	{ name = "Ensemble: Fashion of the Fanatic Felcyclist", kind = "transmog", mindSeeker = true, linkedSecret = true, itemID = 246973, questID = 91636,  partOf = "12 Orb Mystery", guideURL = "https://warcraft-secrets.com/guides/incognitro-the-indecipherable-felcycle#Puzzle_12_Dusk_Lily",
 	  steps = {
 	    { label = "Find the suramar ghost",    note = "Form a group with Torch of Pyrreth active; the ghost patrols Suramar @ 83.6, 69.6 - use the extra action button to reveal it when you are nearby", waypoint = { mapID = 680, x = 0.8360, y = 0.6960 } },
 	    { label = "Free the Dusk Lily",        note = "Interact with the Web of Shadows near the revealed ghost to free the Dusk Lily; the player who interacts gains the Dusk Lily buff" },
