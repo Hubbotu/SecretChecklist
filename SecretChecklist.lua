@@ -401,7 +401,7 @@ function SC:GetStepStatus(step)
 		if standingID >= step.repReq.standingID then return "done" end
 		return "missing"
 	end
-	if step.substeps then
+	if SC:ResolveSubsteps(step) then
 		-- If the parent item is already in bags, it's done regardless of substep state
 		-- (substep items may be consumed on combine, e.g. Quartered Ancient Rings)
 		if (step.itemID or step.itemIDs) and StepItemCount(step) >= (step.count or 1) then return "done" end
@@ -425,14 +425,26 @@ function SC:GetStepStatus(step)
 	return "missing"
 end
 
+-- Returns the effective substep list for a step, resolving factionSubsteps by the
+-- player's current faction when present, falling back to step.substeps.
+function SC:ResolveSubsteps(step)
+	if step.factionSubsteps then
+		local fkey = (UnitFactionGroup and UnitFactionGroup("player") == "Alliance") and "alliance" or "horde"
+		return step.factionSubsteps[fkey]
+	end
+	return step.substeps
+end
+
 -- Returns (doneCount, total) for a step with substeps.
 -- Collection: doneCount = number of substeps whose item/quest is completed.
 -- Chain:      doneCount = index of the currently-held item (0 = nothing held).
 function SC:GetSubstepProgress(step)
+	local subs = SC:ResolveSubsteps(step)
+	if not subs then return 0, 0 end
 	if step.chain then
-		local total = #step.substeps
+		local total = #subs
 		local highestHeld = 0
-		for idx, sub in ipairs(step.substeps) do
+		for idx, sub in ipairs(subs) do
 			if sub.itemID and C_Item.GetItemCount(sub.itemID, true, nil, nil, true) >= 1 then
 				highestHeld = idx
 			end
@@ -440,7 +452,7 @@ function SC:GetSubstepProgress(step)
 		return highestHeld, total
 	else
 		local done, total = 0, 0
-		for _, sub in ipairs(step.substeps) do
+		for _, sub in ipairs(subs) do
 			local subTotal = sub.count or 1
 			total = total + subTotal
 			if sub.questID and C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted

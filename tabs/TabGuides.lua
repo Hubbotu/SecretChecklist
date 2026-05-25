@@ -1224,8 +1224,9 @@ function SC:BuildGuidesPanel(frame, L)
 			local np   = row.notePanel
 			if step then
 				-- Pre-compute substep progress for label + substep row rendering
+				local resolvedSubs = SC:ResolveSubsteps(step)
 				local subsDone, subsTotal
-				if step.substeps then
+				if resolvedSubs then
 					subsDone, subsTotal = SC:GetSubstepProgress(step)
 				end
 				local st = entryDone and "done" or (SC:GetStepStatus(step) or "missing")
@@ -1260,7 +1261,7 @@ function SC:BuildGuidesPanel(frame, L)
 						local current = (data and data.reaction) or 0
 						local target = step.repReq.standingName or step.repReq.standingID
 						labelText = labelText .. "  (Rank " .. current .. " / " .. target .. ")"
-					elseif step.substeps then
+					elseif resolvedSubs then
 						labelText = labelText .. "  (" .. subsDone .. " / " .. subsTotal .. ")"
 					end
 					row.lbl:SetText(labelText)
@@ -1272,9 +1273,9 @@ function SC:BuildGuidesPanel(frame, L)
 				local numSubstepsCap = substepRows and #substepRows or 0
 				local numSubstepsShown = 0
 				local lastSubstepFrame = nil
-				if step.substeps and numSubstepsCap > 0 then
+				if resolvedSubs and numSubstepsCap > 0 then
 					local prevSRAnchor = np.noteLbl
-					for j, sub in ipairs(step.substeps) do
+					for j, sub in ipairs(resolvedSubs) do
 						if j > numSubstepsCap then break end
 						local sr = substepRows[j]
 						local srDone, srReady = false, false
@@ -1418,7 +1419,7 @@ function SC:BuildGuidesPanel(frame, L)
 				end
 				-- Show expand arrow only when there is something to reveal in the note panel
 				local hasNote = (step.note and step.note ~= "")
-						or (step.substeps and #step.substeps > 0)
+						or (resolvedSubs and #resolvedSubs > 0)
 						or itemBtn:IsShown()
 						or wpBtn:IsShown()
 				row.hasNote = hasNote
