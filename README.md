@@ -72,6 +72,8 @@ Your filter preferences and minimap button position are automatically saved to S
 - These settings persist across characters and sessions
 
 ## Version History
+- **1.9.13**: Updated toc for 12.0.7
+- **1.9.12**: Updated waypoints for Crimson Tidestallion (faction based waypoints)
 - **1.9.11**: Updated toc for 12.0.5
 - **1.9.10**: Fixed Mind-Seeker tracking flags: added `mindSeeker = true` to Sun Darter Hatchling (#16) and Ensemble: Fashion of the Fanatic Felcyclist (#34); removed incorrect `mindSeeker = true` from Cartel Transmorpher (not part of the 34 tracked secrets)
 - **1.9.9**: Improved Secrets of Azeroth completion reliability and step structure: (1) Bound Shadehound codex flow now nests "Buy Partial Rune Codex" + all three rune pages as substeps under the combine step so progression is grouped correctly in the UI; removed fragile parent `questID=63668` dependency and rely on resulting item progress (`Intact Rune Codex`) instead; (2) added achievement-criteria fallback support in step status checks (`achievementID` + `criteriaID`) to handle secret quests that do not always report as completed; applied to Whodunnit chain steps in Tricked-Out Thinking Cap (Secret 1-15), including Secret 2 (Tuskarr Ceremonial Spear), so criteria completion now marks steps done even when quest flags are inconsistent
