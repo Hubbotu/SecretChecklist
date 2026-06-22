@@ -307,13 +307,19 @@ function SC:CheckEntry(entry)
 		if not ok or not info then
 			return nil, "Housing catalog data not loaded yet."
 		end
-		-- Use entrySubtype as the authoritative ownership signal.
-		-- Enum.HousingCatalogEntrySubtype: 0=Invalid, 1=Unowned, 2=OwnedModifiedStack, 3=OwnedUnmodifiedStack
-		-- subtype 0/nil = ownership layer not merged yet → nil (unknown).
-		-- subtype 1 is ambiguous: "genuinely unowned" OR "storage not loaded yet".
-		-- Guard with _housingStorageReady: if storage hasn't confirmed it's loaded
-		-- this session, return nil rather than false to avoid UI flicker on zone
-		-- transitions where storage briefly clears before reloading.
+		-- Primary ownership check: totalNumStored + numPlaced + totalNumPlaced.
+		-- entrySubtype (0=Invalid, 1=Unowned, 2=OwnedModified, 3=OwnedUnmodified) is
+		-- documented as the ownership signal but has been observed to stay 1 even for
+		-- owned items (Blizzard API inconsistency confirmed in-game). The quantity fields
+		-- are reliable: storage-loaded items show totalNumStored>0 when owned.
+		local totalOwned = (info.totalNumStored or 0) + (info.numPlaced or 0) + (info.totalNumPlaced or 0)
+		if totalOwned > 0 then
+			return true, "housing"
+		end
+		-- Fallback to entrySubtype for items where quantity fields are absent or zero.
+		-- subtype 0/nil = catalog not merged yet → nil (unknown).
+		-- subtype 1 = API reports Unowned; guard with _housingStorageReady to avoid
+		-- false-negative flicker during zone transitions where storage briefly clears.
 		local subtype = info.entryID and info.entryID.entrySubtype
 		if not subtype or subtype == 0 then
 			return nil, "Housing catalog data not loaded yet."
