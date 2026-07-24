@@ -249,7 +249,14 @@ function SC:CheckHousingCollections()
 				-- do NOT toast; just record as collected.
 				SC._alertSnapshot[entry] = true
 			elseif status == "missing" then
-				SC._alertSnapshot[entry] = false
+				-- Never downgrade a confirmed-collected housing item to false.
+				-- HOUSING_STORAGE_UPDATED can fire early (totalNumStored=0) before
+				-- the catalog is fully merged, producing a spurious false→true swing
+				-- that re-fires the toast on every zone. Housing items can't become
+				-- un-collected mid-session, so a true snapshot is sticky.
+				if snapshot ~= true then
+					SC._alertSnapshot[entry] = false
+				end
 			end
 			-- "unknown" status: leave snapshot unchanged
 		end

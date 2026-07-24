@@ -427,6 +427,14 @@ function SC:GetStepStatus(step)
 			return "ready"
 		end
 		if step.itemID and PlayerHasToy and PlayerHasToy(step.itemID) then return "done" end
+		-- Housing items go to the catalog (not bags) on purchase — check ownership there.
+		if step.itemID and C_HousingCatalog and C_HousingCatalog.GetCatalogEntryInfoByItem then
+			local ok, hinfo = pcall(C_HousingCatalog.GetCatalogEntryInfoByItem, step.itemID, true)
+			if ok and hinfo then
+				local hTotal = (hinfo.totalNumStored or 0) + (hinfo.numPlaced or 0) + (hinfo.totalNumPlaced or 0)
+				if hTotal > 0 then return "done" end
+			end
+		end
 	end
 	return "missing"
 end
