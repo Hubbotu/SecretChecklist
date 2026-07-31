@@ -215,7 +215,15 @@ function SC:BuildOverviewPanel(frame, L)
 					end
 				end
 			elseif entry.kind == "achievement" and entry.achievementID then
-				success = TryTooltip("SetHyperlink", "achievement:" .. entry.achievementID)
+				-- Build the link with GetAchievementLink rather than by hand.
+				--
+				-- A full achievement link carries the achievement id, the player
+				-- GUID, a completed flag, the completion date and four criteria
+				-- fields. "achievement:<id>" supplies only the first, so the tooltip
+				-- has no GUID to resolve and sits on "Retrieving data" while it
+				-- waits for information that is never going to arrive.
+				local achLink = GetAchievementLink and GetAchievementLink(entry.achievementID)
+				success = TryTooltip("SetHyperlink", achLink or ("achievement:" .. entry.achievementID))
 			elseif entry.kind == "transmog" and entry.itemID then
 				success = TryTooltip("SetItemByID", entry.itemID)
 			elseif entry.kind == "housing" and entry.itemID then
