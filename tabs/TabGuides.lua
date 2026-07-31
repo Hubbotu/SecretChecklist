@@ -50,7 +50,6 @@ function SC:BuildGuidesPanel(frame, L)
 	local GP_DIV_W          = 2     -- divider strip
 	local GP_PAD            = 8     -- general padding
 	local GP_ROW_H          = 44    -- height of each list row
-	local GP_FILTER_H       = 28    -- height reserved at top of list pane for filter dropdown
 	local GP_TOP_DRP        = GP_PAD + 20 -- total drop from panel top to list pane start
 
 	-- ---- per-panel state ----

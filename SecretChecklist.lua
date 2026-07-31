@@ -1,5 +1,5 @@
 -- Localize frequently-used globals for performance
-local type, pairs, ipairs = type, pairs, ipairs
+local type, ipairs = type, ipairs
 local math_min = math.min
 local select = select
 

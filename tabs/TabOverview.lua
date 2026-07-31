@@ -16,7 +16,7 @@
 local SC = _G.SecretChecklist
 if not SC then return end
 
-local math_min, math_max, math_ceil = math.min, math.max, math.ceil
+local math_min, math_ceil = math.min, math.ceil
 local select        = select
 local string_format = string.format
 

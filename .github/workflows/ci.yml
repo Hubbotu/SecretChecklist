@@ -1,0 +1,47 @@
+# Continuous checks that run on ordinary pushes and pull requests.
+# Releasing is handled separately by release.yml, which triggers only on tags.
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+  pull_request:
+
+jobs:
+
+  lint:
+    name: Luacheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v6
+
+      - name: Install Lua and luacheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.1 luarocks
+          sudo luarocks install luacheck
+
+      # Configuration lives in .luacheckrc at the repo root, so a local
+      # `luacheck .` reproduces this exactly.
+      - name: Run luacheck
+        run: luacheck . --no-color
+
+  package:
+    name: Packager dry run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # -d builds the package without uploading anywhere, so a broken .pkgmeta
+      # or TOC is caught here instead of at tag time.
+      - name: Package (no upload)
+        uses: BigWigsMods/packager@v2
+        with:
+          args: -d
