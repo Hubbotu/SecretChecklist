@@ -746,6 +746,10 @@ SlashCmdList.SECRETCHECKLIST = function(msg)
 		else
 			print("|cffffcc00SecretChecklist:|r Alert system not ready yet.")
 		end
+	elseif msg == "validate" then
+		if SC.ValidateData then
+			SC:ValidateData()
+		end
 	else
 		-- Default: open UI
 		if SC.OpenCollectionsSecretsTab then
