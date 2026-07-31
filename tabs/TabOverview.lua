@@ -311,8 +311,23 @@ function SC:BuildOverviewPanel(frame, L)
 			button.iconTexture:SetShown(isCollected)
 			button.iconTextureUncollected:SetShown(not isCollected)
 
-			local useFlat = ElvUI and SC.currentThemeName and SC.currentThemeName ~= "Default"
-			if useFlat then
+			local themeName = SC.currentThemeName
+			local euiSkin   = (themeName == "EllesmereUI") and SC._euiSkin or nil
+			local useFlat   = ElvUI and themeName == "ElvUI"
+			if euiSkin then
+				-- EllesmereUI: squared, 1px-bordered icons in place of the round
+				-- atlas slot art, matching how EUI treats icons elsewhere.
+				button.slotFrameCollected:Hide()
+				button.slotFrameUncollected:Hide()
+				button.slotFrameUncollectedInnerGlow:Hide()
+				if button.iconFrame and button.iconFrame.backdrop then
+					button.iconFrame.backdrop:Hide()
+				end
+				-- Border once only: both textures share the same geometry, and
+				-- BorderRegion draws a fresh set of lines per region.
+				euiSkin.SquareIcon(button.iconTexture, button.iconFrame)
+				euiSkin.SquareIcon(button.iconTextureUncollected)
+			elseif useFlat then
 				-- Flat theme: hide round atlas borders, use ElvUI backdrop border instead
 				button.slotFrameCollected:Hide()
 				button.slotFrameUncollected:Hide()

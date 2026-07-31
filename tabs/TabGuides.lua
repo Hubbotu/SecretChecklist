@@ -500,6 +500,7 @@ function SC:BuildGuidesPanel(frame, L)
 	linkBtn:SetText("Guide")
 	linkBtn.currentURL = ""
 	linkBtn:SetEnabled(false) -- greyed until a URL is present
+	SC.guidesLinkBtn = linkBtn -- exported for theme skinning
 	-- Hide the dropdown arrow — iterate regions to find it by texture path/atlas
 	for _, region in ipairs({ linkBtn:GetRegions() }) do
 		local rtype = region.GetObjectType and region:GetObjectType()

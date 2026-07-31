@@ -178,6 +178,17 @@ function SC:GetFilteredEntries() return GetFilteredEntries() end
 -- ==============================================
 
 local function SetTabActive(button, isActive)
+	-- EllesmereUI's Tab primitive owns the whole tab visual (flat plate, own
+	-- label, accent underline) and reads selection from button.isSelected --
+	-- our frame is not a PanelTemplates-managed tab system, so that flag is
+	-- what its TabIsSelected check falls through to.  Set it and let the
+	-- primitive repaint; it is idempotent, so re-calling is near-free.
+	button.isSelected = isActive
+	if button._euiSkinned and SC._euiSkin and SC.currentThemeName == "EllesmereUI" then
+		SC._euiSkin.Tab(button)
+		return
+	end
+
 	-- When a flat theme (e.g. ElvUI) has placed its own backdrop (elvBg) over
 	-- the tab, skip the atlas show/hide so our theme hide isn't overridden.
 	if button.elvBg and button.elvBg:IsShown() then
@@ -872,7 +883,12 @@ local function CreateOptionsPanel()
 	-- Theme selection dropdown
 	if Settings.CreateDropdown and Settings.CreateControlTextContainer then
 		local function GetTheme() return SecretChecklistDB.theme or "Default" end
-		local function SetTheme(value) SC:ApplyTheme(value) end
+		local function SetTheme(value)
+			-- Records that the theme is a deliberate choice, so the EllesmereUI
+			-- auto-select never overrides it on a later login.
+			SecretChecklistDB.themeUserSet = true
+			SC:ApplyTheme(value)
+		end
 		local themeSetting = Settings.RegisterProxySetting(
 			category,
 			"SECRETCHECKLIST_THEME",
@@ -885,7 +901,10 @@ local function CreateOptionsPanel()
 		local function GetThemeOptions()
 			local container = Settings.CreateControlTextContainer()
 			-- Add Default first, then any other available themes
-			for _, key in ipairs({ "Default", "ElvUI" }) do
+			local ordered = { "Default", "ElvUI", "EllesmereUI" }
+			local isOrdered = {}
+			for _, key in ipairs(ordered) do
+				isOrdered[key] = true
 				local theme = SC.themes and SC.themes[key]
 				if theme and theme.Available then
 					container:Add(key, theme.Name, theme.Description)
@@ -893,7 +912,7 @@ local function CreateOptionsPanel()
 			end
 			-- Add any runtime-registered themes not in the hardcoded list above
 			for key, theme in pairs(SC.themes or {}) do
-				if theme.Available and key ~= "Default" and key ~= "ElvUI" then
+				if theme.Available and not isOrdered[key] then
 					container:Add(key, theme.Name, theme.Description)
 				end
 			end
@@ -1069,7 +1088,16 @@ do
 			RegisterAddonCompartment()
 		end
 		-- Apply saved theme (deferred to PLAYER_LOGIN so SavedVariables are committed)
-		-- Auto-select ElvUI theme on first load if ElvUI is present and no theme has been saved yet
+		-- Installs from before themeUserSet existed: an already-saved theme counts
+		-- as a deliberate choice, so upgrading never moves anyone off it.  Seeded
+		-- here (and again in the EllesmereUI skin callback, whichever runs first)
+		-- BEFORE the auto-picks below, so an auto-pick is not mistaken for one.
+		if SecretChecklistDB.themeUserSet == nil then
+			SecretChecklistDB.themeUserSet = (SecretChecklistDB.theme ~= nil)
+		end
+		-- Auto-select ElvUI theme on first load if ElvUI is present and no theme has been saved yet.
+		-- EllesmereUI, when present and able to skin us, takes precedence and
+		-- claims this from its own skin callback (it can only paint once that fires).
 		if not SecretChecklistDB.theme and ElvUI then
 			SecretChecklistDB.theme = "ElvUI"
 		end

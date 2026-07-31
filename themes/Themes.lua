@@ -31,6 +31,10 @@ function SC:RegisterTheme(key, theme)
 end
 
 -- Returns {r,g,b,a} for a named colour; falls back to Default then white.
+-- A colour entry may be a function returning {r,g,b,a} instead of a literal
+-- table.  Themes that derive their palette from another addon (EllesmereUI's
+-- live accent, for example) use that form so every read resolves fresh --
+-- those sources mutate their colour tables in place and must not be cached.
 function SC:ThemeColor(key)
 	local name  = SC.currentThemeName or "Default"
 	local theme = SC.themes[name]
@@ -39,12 +43,14 @@ function SC:ThemeColor(key)
 		local def = SC.themes["Default"]
 		c = def and def.colors and def.colors[key]
 	end
+	if type(c) == "function" then c = c() end
 	return c or {1, 1, 1, 1}
 end
 
 -- Activates the theme.  Updates all registered targets and notifies panels.
 function SC:ApplyTheme(key)
-	local theme = SC.themes[key]
+	local requested = key
+	local theme     = SC.themes[key]
 	if not theme or not theme.Available then
 		key   = "Default"
 		theme = SC.themes["Default"]
@@ -58,8 +64,16 @@ function SC:ApplyTheme(key)
 		if oldTheme and oldTheme.OnReset then oldTheme.OnReset() end
 	end
 
-	SC.currentThemeName     = key
-	SecretChecklistDB.theme = key
+	SC.currentThemeName = key
+
+	-- Only persist when the requested theme was actually applied.  A theme
+	-- whose host addon has not finished loading is briefly unavailable (the
+	-- EllesmereUI skin callback arrives after PLAYER_LOGIN, for example), and
+	-- writing the Default fallback here would silently erase the user's choice
+	-- before the real theme has had a chance to register.
+	if requested == key then
+		SecretChecklistDB.theme = key
+	end
 
 	-- Inset background
 	local t = SC.themeTargets
@@ -111,6 +125,8 @@ SC:RegisterTheme("Default", {
 SC:RegisterTheme("ElvUI", {
 	Name        = "ElvUI",
 	Description = "A flat dark theme matching ElvUI's aesthetic. Requires ElvUI.",
+	-- Resolved once, at file load, so ElvUI must already be loaded by then --
+	-- that is what the ## OptionalDeps line in the .toc guarantees.
 	Available   = (ElvUI ~= nil),
 	colors = {
 		insetBg = {0.06, 0.06, 0.06, 1.00},

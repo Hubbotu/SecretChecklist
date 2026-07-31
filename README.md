@@ -72,6 +72,9 @@ Your filter preferences and minimap button position are automatically saved to S
 - These settings persist across characters and sessions
 
 ## Version History
+- **1.11.0**: Added an EllesmereUI theme built on EllesmereUI 8.6's public skinning API (`EllesmereUI.RegisterSkin`) — the window, tabs, buttons and toasts are painted by EUI itself and track the accent colour, window style and UI font set on your EUI profile, live. Theme colour entries may now be functions so a palette can resolve per read instead of being frozen at load; `ApplyTheme` no longer overwrites the saved theme when it falls back to Default because a host addon has not loaded yet (this previously erased the choice at every login). Also fixed `RefreshAlertTheme` never running — its guard referenced a local declared later in the file, so the name resolved to a nil global and existing toasts were never re-skinned on a theme change
+- **1.10.1**: Fixed the Shu'halo Perspective painting re-firing its "Secret Collected" toast on zone transitions (an early `HOUSING_STORAGE_UPDATED` with `totalNumStored=0` produced a spurious missing→collected swing; a confirmed-collected housing snapshot is now sticky) and made step status housing-aware so the "Buy painting" step reads as done from housing storage rather than bags
+- **1.10.0**: Added Unfazed Diver secret, fix housing ownership detection
 - **1.9.13**: Updated toc for 12.0.7
 - **1.9.12**: Updated waypoints for Crimson Tidestallion (faction based waypoints)
 - **1.9.11**: Updated toc for 12.0.5

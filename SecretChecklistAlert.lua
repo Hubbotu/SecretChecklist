@@ -92,11 +92,48 @@ end
 
 -- Called from OnLoad (when frame first spawns) and from ApplyTheme via Themes.lua.
 -- Skins a single alert frame instance to match the active theme.
+-- Original colours of the Lua-built background and accent lines, so the
+-- default branch can restore them after a theme has recoloured them.
+local DEFAULT_BG   = { 0.04, 0.03, 0.09, 0.96 }
+local DEFAULT_TOP  = { 0.80, 0.65, 0.10, 1 }
+local DEFAULT_BOT  = { 0.40, 0.32, 0.05, 1 }
+
 function SC:ApplyAlertTheme(alertFrame)
 	if not alertFrame then return end
 	local isElvUI = (SC.currentThemeName == "ElvUI") and ElvUI
+	local euiSkin = (SC.currentThemeName == "EllesmereUI") and SC._euiSkin or nil
 
-	if isElvUI then
+	if euiSkin then
+		-- Recolour our own background and lines from EllesmereUI rather than
+		-- running its Panel primitive: the toast's glow and shine are direct
+		-- texture regions on this frame, and Panel's art removal alphas every
+		-- region out, which would kill both animations.
+		local pr, pg, pb, pa = euiSkin.GetPanelColor()
+		local ar, ag, ab     = euiSkin.GetAccentColor()
+		if alertFrame._defaultBg then
+			alertFrame._defaultBg:Show()
+			-- Toasts float over the world, so keep them close to opaque even
+			-- when the panel fill itself is semi-transparent.
+			alertFrame._defaultBg:SetColorTexture(pr, pg, pb, math.max(pa or 0, 0.95))
+		end
+		if alertFrame._topLine then
+			alertFrame._topLine:Show()
+			alertFrame._topLine:SetColorTexture(ar, ag, ab, 1)
+		end
+		if alertFrame._botLine then
+			alertFrame._botLine:Show()
+			alertFrame._botLine:SetColorTexture(ar * 0.5, ag * 0.5, ab * 0.5, 1)
+		end
+		if alertFrame.backdrop then alertFrame.backdrop:Hide() end
+		if alertFrame.Icon then
+			euiSkin.SquareIcon(alertFrame.Icon.Texture, alertFrame.Icon)
+			if alertFrame.Icon.Overlay then
+				alertFrame.Icon.Overlay:SetVertexColor(ar, ag, ab, 1)
+			end
+		end
+		euiSkin.Font(alertFrame.Name)
+		euiSkin.Font(alertFrame.Label)
+	elseif isElvUI then
 		local E = unpack(ElvUI)
 		-- Replace the plain colour bg with an ElvUI Transparent backdrop
 		if alertFrame._defaultBg then alertFrame._defaultBg:Hide() end
@@ -117,11 +154,22 @@ function SC:ApplyAlertTheme(alertFrame)
 			end
 		end
 	else
-		-- Restore default look
-		if alertFrame._defaultBg then alertFrame._defaultBg:Show() end
-		if alertFrame._topLine   then alertFrame._topLine:Show()   end
-		if alertFrame._botLine   then alertFrame._botLine:Show()   end
-		if alertFrame.backdrop   then alertFrame.backdrop:Hide()   end
+		-- Restore default look.  Colours are re-set explicitly, not just
+		-- re-shown: the EllesmereUI branch above recolours these same textures
+		-- in place, so showing them again is not enough to undo it.
+		if alertFrame._defaultBg then
+			alertFrame._defaultBg:Show()
+			alertFrame._defaultBg:SetColorTexture(unpack(DEFAULT_BG))
+		end
+		if alertFrame._topLine then
+			alertFrame._topLine:Show()
+			alertFrame._topLine:SetColorTexture(unpack(DEFAULT_TOP))
+		end
+		if alertFrame._botLine then
+			alertFrame._botLine:Show()
+			alertFrame._botLine:SetColorTexture(unpack(DEFAULT_BOT))
+		end
+		if alertFrame.backdrop then alertFrame.backdrop:Hide() end
 		if alertFrame.Icon and alertFrame.Icon.Overlay then
 			alertFrame.Icon.Overlay:SetVertexColor(1, 1, 1, 1)
 		end
@@ -131,7 +179,11 @@ end
 -- Re-skins all currently pooled/visible alert frame instances.
 -- Called by Themes.lua OnApply / OnReset via SC.onAlertThemeChanged.
 function SC:RefreshAlertTheme()
-	if not alertSubSystem then return end
+	-- No alertSubSystem guard here: the local is declared further down this
+	-- file, so the name resolved to a nil *global* and this function bailed on
+	-- every call.  The loop below is safe with no frames spawned yet -- it just
+	-- finds nothing and exits.
+	--
 	-- The sub-system keeps an internal pool; iterate the global frame pool via
 	-- the named template pattern ContainedAlertFrame uses.
 	local i = 1
