@@ -481,7 +481,11 @@ bh_frame:SetScript("OnEvent", function(_, event, ...)
         bh_frame:RegisterEvent("CHAT_MSG_ADDON")
         bh_frame:RegisterEvent("PLAYER_TARGET_CHANGED")
         bh_frame:RegisterEvent("GROUP_ROSTER_UPDATE")
-        bh_frame:RegisterEvent("UNIT_AURA")
+        -- The emote stacks we care about sit on the Divine Flame, i.e. on the
+        -- "target" unit. RegisterUnitEvent filters in C, so raid/party/nameplate
+        -- aura churn never reaches Lua -- plain RegisterEvent here meant every
+        -- aura tick on every unit in a 20-man raid entered this handler.
+        bh_frame:RegisterUnitEvent("UNIT_AURA", "target")
         bh_frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
         bh_frame:RegisterEvent("ZONE_CHANGED")
         bh_frame:RegisterEvent("ZONE_CHANGED_INDOORS")
@@ -505,7 +509,11 @@ bh_frame:SetScript("OnEvent", function(_, event, ...)
         BH_UpdatePopup()
 
     elseif event == "UNIT_AURA" then
-        -- No aura validation needed (we don't have the leader UI), ignore
+        -- Registered as a unit event on "target", so this only fires for the
+        -- Divine Flame's own aura stacks. The follower UI does not validate the
+        -- raid-wide combination (that is the leader's job), but a stack change
+        -- is the signal that our own emote landed, so refresh the popup.
+        BH_UpdatePopup()
 
     elseif event == "ZONE_CHANGED_NEW_AREA" or event == "ZONE_CHANGED" or event == "ZONE_CHANGED_INDOORS" then
         if not BH_IsHallowfall() then
