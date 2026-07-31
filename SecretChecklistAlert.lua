@@ -89,8 +89,13 @@ function SecretChecklist_AlertFrameMixin:OnLeave()
 end
 
 function SecretChecklist_AlertFrameMixin:OnClick(button, down)
-	-- Right-click / standard close handling from the alert system
-	if AlertFrame_OnClick and AlertFrame_OnClick(self, button, down) then
+	-- Right-click dismisses the toast.
+	--
+	-- This used to delegate to AlertFrame_OnClick, a Classic-era global that
+	-- does not exist on retail. The `and` guard meant no error, but also meant
+	-- right-click did nothing at all.
+	if button == "RightButton" then
+		self:Hide()
 		return
 	end
 	-- Left-click: open the checklist and jump straight to the guide entry

@@ -432,8 +432,12 @@ local function Initialize()
 	end
 
 	-- Set proper font size for page text
+	-- GetFont returns nil when the inherited font object has not resolved, and
+	-- SetFont(nil, ...) errors.
 	local fontPath, _, fontFlags = frame.PagingFrame.PageText:GetFont()
-	frame.PagingFrame.PageText:SetFont(fontPath, 12, fontFlags)
+	if fontPath then
+		frame.PagingFrame.PageText:SetFont(fontPath, 12, fontFlags)
+	end
 
 	-- Create filter dropdown in Lua (same path as wowhead button in TabGuides → guaranteed pill texture)
 	if not frame.FilterDropdown then

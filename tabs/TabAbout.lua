@@ -130,9 +130,12 @@ function SC:BuildAboutPanel(frame, L)
 	copyBox:SetScript("OnEscapePressed", function() copyDialog:Hide() end)
 	copyBox:SetScript("OnEnterPressed", function() copyDialog:Hide() end)
 	copyBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+	-- Restore whichever URL the dialog was opened for. This used to hardcode
+	-- discordURL, so typing in the box after opening it from the Warcraft
+	-- Secrets button snapped the text back to the Discord link.
 	copyBox:SetScript("OnTextChanged", function(self, userInput)
 		if userInput then
-			self:SetText(discordURL)
+			self:SetText(copyDialog.currentURL or "")
 			self:HighlightText()
 		end
 	end)
@@ -155,6 +158,7 @@ function SC:BuildAboutPanel(frame, L)
 		copyDialog:SetPoint("TOP", UIParent, "BOTTOMLEFT",
 			bx * scale,
 			(by - self:GetHeight() * 0.5) * scale - 4)
+		copyDialog.currentURL = discordURL
 		copyBox:SetText(discordURL)
 		copyDialog:Show()
 		copyBox:SetFocus()
@@ -200,6 +204,7 @@ function SC:BuildAboutPanel(frame, L)
 		copyDialog:SetPoint("TOP", UIParent, "BOTTOMLEFT",
 			bx * scale,
 			(by - self:GetHeight() * 0.5) * scale - 4)
+		copyDialog.currentURL = wsURL
 		copyBox:SetText(wsURL)
 		copyDialog:Show()
 		copyBox:SetFocus()

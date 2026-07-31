@@ -397,12 +397,20 @@ function SC:CheckEntry(entry)
 		return numOwned > 0, "pet"
 	end
 
+	-- These two branches validate their id like every other kind does. Both APIs
+	-- error on a nil id, and the data file is where contributors add entries.
 	if entry.kind == "achievement" then
+		if type(entry.achievementID) ~= "number" then
+			return nil, "Achievement entry missing achievementID."
+		end
 		local _, _, _, completed = GetAchievementInfo(entry.achievementID)
 		return completed == true, "achievement"
 	end
 
 	if entry.kind == "quest" then
+		if type(entry.questID) ~= "number" then
+			return nil, "Quest entry missing questID."
+		end
 		if C_QuestLog and C_QuestLog.IsQuestFlaggedCompletedOnAccount then
 			return C_QuestLog.IsQuestFlaggedCompletedOnAccount(entry.questID) == true, "quest"
 		end
