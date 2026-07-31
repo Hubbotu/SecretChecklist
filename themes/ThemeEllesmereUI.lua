@@ -113,6 +113,7 @@ local function ApplySkin()
 	end
 
 	if frame.FilterDropdown then S.Dropdown(frame.FilterDropdown) end
+	if SC.guidesSearchBox then S.EditBox(SC.guidesSearchBox) end
 
 	-- ---- Bottom tab row ----
 	-- EUI resolves tab selection from tab.isSelected when the parent is not a

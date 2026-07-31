@@ -74,6 +74,7 @@ read_globals = {
 	"Minimap",
 	"Model_ApplyUICamera",
 	"PlaySound",
+	"SearchBoxTemplate_OnTextChanged",
 	"Settings",
 	"UIParent",
 	"UiMapPoint",

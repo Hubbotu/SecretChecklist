@@ -114,8 +114,39 @@ function SC:BuildGuidesPanel(frame, L)
 	-- FILTERING  (reads shared filter state via SC accessors)
 	-- ==============================================
 
+	-- Free-text search, applied on top of the shared filter state.
+	local guides_searchText = ""
+
+	-- Matches a search term against everything a player might reasonably type:
+	-- the name, the kind, the source and description shown in the detail pane,
+	-- and the step labels and notes. Searching only names would miss "Kosumoth"
+	-- or "Tazavesh", which are how people actually refer to these secrets.
+	local function EntryMatchesSearch(entry, term)
+		local name = SC:GetEntryName(entry)
+		if name and name:lower():find(term, 1, true) then return true end
+		for _, field in ipairs({ entry.kind, entry.source, entry.desc, entry.partOf }) do
+			if type(field) == "string" and field:lower():find(term, 1, true) then return true end
+		end
+		for _, step in ipairs(entry.steps or {}) do
+			if type(step.label) == "string" and step.label:lower():find(term, 1, true) then return true end
+			if type(step.note) == "string" and step.note:lower():find(term, 1, true) then return true end
+		end
+		return false
+	end
+
 	local function Guides_ApplyFilter()
-		guides_entries = SC:GetFilteredEntries()
+		local entries = SC:GetFilteredEntries()
+		if guides_searchText == "" then
+			guides_entries = entries
+			return
+		end
+		local matched = {}
+		for _, entry in ipairs(entries) do
+			if EntryMatchesSearch(entry, guides_searchText) then
+				matched[#matched + 1] = entry
+			end
+		end
+		guides_entries = matched
 	end
 
 	-- forward declarations for mutual recursion
@@ -146,6 +177,37 @@ function SC:BuildGuidesPanel(frame, L)
 	listPane:SetPoint("TOPLEFT", guidesPanel, "TOPLEFT", GP_PAD, -GP_TOP_DRP)
 	listPane:SetPoint("BOTTOMLEFT", guidesPanel, "BOTTOMLEFT", GP_PAD, GP_PAD)
 	listPane:SetWidth(GP_LEFT_W)
+
+	-- Search box, in the strip above the list.
+	--
+	-- 52 entries in a fixed-height list with no way to jump to one: finding
+	-- "Uuna" meant scrolling and reading. SearchBoxTemplate gives the magnifier,
+	-- the placeholder and the clear button for free, and matches the search boxes
+	-- in Blizzard's own journals.
+	local searchBox = CreateFrame("EditBox", nil, guidesPanel, "SearchBoxTemplate")
+	searchBox:SetPoint("BOTTOMLEFT", listPane, "TOPLEFT", 4, 2)
+	searchBox:SetPoint("BOTTOMRIGHT", listPane, "TOPRIGHT", 0, 2)
+	searchBox:SetHeight(20)
+	-- Never steal keyboard focus when the tab opens.
+	searchBox:SetAutoFocus(false)
+	searchBox:SetScript("OnTextChanged", function(self)
+		-- The template's own handler drives the placeholder text and the clear
+		-- button; SetScript replaces it, so it has to be called explicitly.
+		if SearchBoxTemplate_OnTextChanged then
+			SearchBoxTemplate_OnTextChanged(self)
+		end
+		local text = (self:GetText() or ""):lower()
+		if text == guides_searchText then return end
+		guides_searchText = text
+		-- Reuse the filter-changed path: it resets scroll to the top, which is
+		-- what you want when the result set changes underneath you.
+		SC.onFilterChange()
+	end)
+	searchBox:SetScript("OnEscapePressed", function(self)
+		self:SetText("")
+		self:ClearFocus()
+	end)
+	SC.guidesSearchBox = searchBox
 
 	-- ScrollFrame: clips the list rows and handles vertical scrolling
 	scrollFrame = CreateFrame("ScrollFrame", nil, listPane)
