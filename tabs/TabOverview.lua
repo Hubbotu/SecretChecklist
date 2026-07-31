@@ -224,15 +224,19 @@ function SC:BuildOverviewPanel(frame, L)
 				if achLink then
 					success = TryTooltip("SetHyperlink", achLink)
 					if success then
-						-- Blizzard's achievement tooltip resolves the earning
-						-- character's name from the GUID embedded in the link.
-						-- Achievements are account-wide but the link records which
-						-- character earned it, so for one earned on an alt that
-						-- lookup goes to the server and can stay unresolved --
-						-- leaving a RETRIEVING_DATA line sitting under the title
-						-- forever. Blank it rather than show the player a permanent
-						-- "Retrieving data" on a secret they have demonstrably
-						-- already completed.
+						-- Blizzard's achievement tooltip renders an "earned by" line
+						-- from the GUID embedded in the link. Under warband-wide
+						-- achievements some are attributed to the warband rather than
+						-- to any character, so that GUID resolves to no name -- and
+						-- the tooltip parks a RETRIEVING_DATA line under the title
+						-- permanently, because there is nothing in flight for it to
+						-- be waiting on.
+						--
+						-- Observed on an achievement earned by the logged-in
+						-- character itself, so this is not an alt-name lookup and not
+						-- a cold cache: re-hovering never clears it. Blank the line
+						-- rather than show a permanent "Retrieving data" on a secret
+						-- the player has demonstrably already completed.
 						for i = 2, GameTooltip:NumLines() do
 							local line = _G["GameTooltipTextLeft" .. i]
 							if line and line:GetText() == RETRIEVING_DATA then
