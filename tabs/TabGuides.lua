@@ -856,13 +856,18 @@ function SC:BuildGuidesPanel(frame, L)
 	stepsHeader.lbl = stepsHdrLbl
 	stepsHeader:SetScript("OnClick", function()
 		stepsCollapsed = not stepsCollapsed
-		if stepsCollapsed then
-			for i = 1, currentNumSteps do
-				stepRows[i]:Hide()
-				stepRows[i].notePanel:Hide()
-			end
-		else
-			for i = 1, currentNumSteps do stepRows[i]:Show() end
+		for i = 1, currentNumSteps do
+			local row = stepRows[i]
+			if not row then break end
+			row:SetShown(not stepsCollapsed)
+			-- Keep each note panel in step with its own row.isOpen flag.
+			--
+			-- Collapsing used to hide the panels without clearing isOpen, and
+			-- expanding only re-showed the header rows -- so a step that had been
+			-- opened came back with its arrow reading "-" but its panel still
+			-- hidden, and clicking it then "closed" something already invisible.
+			-- Restoring from isOpen preserves what the player had open.
+			row.notePanel:SetShown(not stepsCollapsed and row.isOpen == true)
 		end
 		local label = stepsHeader.lbl:GetText() or ""
 		stepsHeader.lbl:SetText((stepsCollapsed and "+" or "-") .. label:sub(2))
