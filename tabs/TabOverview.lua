@@ -16,7 +16,7 @@
 local SC = _G.SecretChecklist
 if not SC then return end
 
-local math_min, math_ceil = math.min, math.ceil
+local math_min, math_max, math_ceil = math.min, math.max, math.ceil
 local select        = select
 local string_format = string.format
 
@@ -282,9 +282,13 @@ function SC:BuildOverviewPanel(frame, L)
 	-- LAYOUT
 	-- ==============================================
 
-	local function LayoutCurrentPage()
+	-- `entries` is optional: callers that have already run the filter pass hand it
+	-- in so it is not repeated. GetFilteredEntries allocates a result table, a
+	-- lowercased-name table and a comparator closure per call, so the passes are
+	-- worth counting.
+	local function LayoutCurrentPage(entries)
 		if SC.currentTab ~= "overview" then return end
-		local entries = SC:GetFilteredEntries()
+		entries = entries or SC:GetFilteredEntries()
 
 		local startIndex = (frame.currentPage - 1) * BUTTONS_PER_PAGE + 1
 		local endIndex   = math_min(startIndex + BUTTONS_PER_PAGE - 1, #entries)
@@ -384,9 +388,10 @@ function SC:BuildOverviewPanel(frame, L)
 	-- PAGING
 	-- ==============================================
 
-	local function CalculateTotalPages()
-		return math_ceil(#(SC:GetFilteredEntries()) / BUTTONS_PER_PAGE)
-	end
+	-- Last page count computed by UpdatePage. The scroll-wheel handler needs a
+	-- bound but must not trigger another filter pass to get one; the paging
+	-- buttons are enabled/disabled from the same value.
+	local currentMaxPages = 1
 
 	local function UpdateProgressBar()
 		local totalAll, collectedAll = 0, 0
@@ -417,20 +422,29 @@ function SC:BuildOverviewPanel(frame, L)
 	end
 
 	local function UpdatePage(newPage)
-		frame.currentPage = newPage
 		SC:RefreshCaches()
-		LayoutCurrentPage()
+		-- One filter+sort pass, shared by the page count and the layout. This used
+		-- to run twice per call: once inside LayoutCurrentPage and again inside
+		-- CalculateTotalPages.
+		local entries     = SC:GetFilteredEntries()
+		currentMaxPages   = math_max(1, math_ceil(#entries / BUTTONS_PER_PAGE))
+		-- Clamp rather than trust the caller, so a page turn cannot run off the end
+		-- when a filter change has shortened the list.
+		frame.currentPage = math_max(1, math_min(newPage or 1, currentMaxPages))
+		LayoutCurrentPage(entries)
 		UpdateProgressBar()
-		local maxPages = CalculateTotalPages()
-		frame.PagingFrame.PageText:SetText(string_format(L["PAGE_FORMAT"] or "Page %d / %d", frame.currentPage, maxPages))
+		frame.PagingFrame.PageText:SetText(
+			string_format(L["PAGE_FORMAT"] or "Page %d / %d", frame.currentPage, currentMaxPages))
 		frame.PagingFrame.PrevPageButton:SetEnabled(frame.currentPage > 1)
-		frame.PagingFrame.NextPageButton:SetEnabled(frame.currentPage < maxPages)
+		frame.PagingFrame.NextPageButton:SetEnabled(frame.currentPage < currentMaxPages)
 	end
 
 	-- Mouse wheel scrolling through pages (only active on overview tab)
 	frame:SetScript("OnMouseWheel", function(self, delta)
 		if SC.currentTab ~= "overview" then return end
-		local maxPages = CalculateTotalPages()
+		-- Read the bound computed by the last UpdatePage instead of re-running the
+		-- filter pass on every wheel notch.
+		local maxPages = currentMaxPages
 		if delta > 0 then
 			if frame.currentPage > 1 then
 				PlaySound(SOUNDKIT.IG_ABILITY_PAGE_TURN)
@@ -453,8 +467,7 @@ function SC:BuildOverviewPanel(frame, L)
 	end)
 
 	frame.PagingFrame.NextPageButton:SetScript("OnClick", function()
-		local maxPages = CalculateTotalPages()
-		if frame.currentPage < maxPages then
+		if frame.currentPage < currentMaxPages then
 			PlaySound(SOUNDKIT.IG_ABILITY_PAGE_TURN)
 			UpdatePage(frame.currentPage + 1)
 		end
