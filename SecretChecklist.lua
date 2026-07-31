@@ -1,5 +1,5 @@
 -- Localize frequently-used globals for performance
-local type, ipairs = type, ipairs
+local type, pairs, ipairs = type, pairs, ipairs
 local math_min = math.min
 local select = select
 
@@ -8,7 +8,85 @@ local FALLBACK_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 local SC = {}
 _G.SecretChecklist = SC
 
-SecretChecklistDB = SecretChecklistDB or {}
+-- ==============================================
+-- SAVED VARIABLES
+-- ==============================================
+
+local DB_VERSION = 1
+
+-- Every key the addon persists, with its default. Anything not listed here is
+-- either nested (tabFilters) or no longer used.
+local DB_DEFAULTS = {
+	dbVersion            = DB_VERSION,
+	hideMinimapButton    = false,
+	hideAddonCompartment = false,
+	minimapAngle         = 225,
+	alertsEnabled        = true,
+	guidesStyle          = "sidetabs",
+	debugMode            = false,
+	-- theme / themeUserSet are deliberately absent: nil is meaningful for both
+	-- (it is what the ElvUI / EllesmereUI auto-select checks for on first run).
+	tabFilters           = {},
+}
+
+-- Kinds a saved filter may legitimately contain. Used to prune keys left behind
+-- by kinds that no longer exist.
+local VALID_KINDS = {
+	mount = true, pet = true, toy = true, achievement = true,
+	quest = true, transmog = true, housing = true, mystery = true,
+}
+
+-- Top-level keys written by features that have since been removed. They persist
+-- in every existing user's SavedVariables forever unless something deletes them.
+local RETIRED_KEYS = {
+	"filterKinds",  -- superseded by tabFilters.<tab>.kinds
+	"filterStatus", -- superseded by tabFilters.<tab>.showCollected / showMissing
+	"lastError",    -- removed error-reporting feature
+	"lastReport",   -- removed error-reporting feature
+}
+
+-- Idempotent: safe to call more than once.
+function SC:InitDB()
+	-- A client crash mid-write can leave the SavedVariables file truncated, in
+	-- which case the global may be absent or not a table. Indexing it would then
+	-- error before anything else in the addon runs.
+	if type(SecretChecklistDB) ~= "table" then
+		SecretChecklistDB = {}
+	end
+	local db = SecretChecklistDB
+
+	for key, default in pairs(DB_DEFAULTS) do
+		if db[key] == nil then
+			db[key] = (type(default) == "table") and {} or default
+		end
+	end
+
+	-- Migrations are ordered and each one bumps dbVersion. A fresh profile picks
+	-- up dbVersion from DB_DEFAULTS above and skips straight past them.
+	if (db.dbVersion or 0) < 1 then
+		for _, key in ipairs(RETIRED_KEYS) do
+			db[key] = nil
+		end
+		if type(db.tabFilters) == "table" then
+			for _, filter in pairs(db.tabFilters) do
+				if type(filter) == "table" and type(filter.kinds) == "table" then
+					for kind in pairs(filter.kinds) do
+						if not VALID_KINDS[kind] then
+							filter.kinds[kind] = nil
+						end
+					end
+				end
+			end
+		end
+		db.dbVersion = 1
+	end
+
+	return db
+end
+
+-- Called again from ADDON_LOADED; this early call keeps the file-scope readers
+-- (the minimap button's saved angle, for one) working until they move.
+SC:InitDB()
 
 -- Globals required by AddonCompartmentFunc / Enter / Leave
 -- When registered via RegisterAddon() (not TOC), the calling convention is:
