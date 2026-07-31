@@ -330,16 +330,19 @@ function SC:GetEntryStatus(entry)
 	return status, detail
 end
 
-function SC:CheckEntry(entry)
-	-- Always check questID first — most secrets flag a hidden quest on completion,
-	-- and this is more reliable than API-specific checks (e.g. ensemble transmog items).
-	if type(entry.questID) == "number" and C_QuestLog and C_QuestLog.IsQuestFlaggedCompletedOnAccount then
-		if C_QuestLog.IsQuestFlaggedCompletedOnAccount(entry.questID) == true then
-			return true, "quest"
-		end
-	end
-
-	if entry.kind == "toy" then
+-- One resolver per kind.
+--
+-- This was a 190-line if-chain, which meant adding a collectible type required
+-- finding the right place inside it and the important part -- the questID
+-- short-circuit that most secrets actually resolve through -- was buried at the
+-- top of it. Each resolver is now independently readable, and the transmog bug
+-- fixed in 3fc4fe0 is the kind of thing that hid in the middle of the chain.
+--
+-- Each takes an entry and returns (collected, detail), where collected is
+-- true / false / nil, nil meaning "cannot tell yet".
+local checkers = {}
+do
+	checkers.toy = function(entry)
 		if type(entry.itemID) ~= "number" then
 			return nil, "Toy missing itemID."
 		end
@@ -359,7 +362,7 @@ function SC:CheckEntry(entry)
 		return false, "toy"
 	end
 
-	if entry.kind == "mount" then
+	checkers.mount = function(entry)
 		if not C_MountJournal or not C_MountJournal.GetMountInfoByID then
 			return nil, "MountJournal API unavailable (try after fully logged in)."
 		end
@@ -388,7 +391,7 @@ function SC:CheckEntry(entry)
 		return nil, "Could not map to a mount yet (no mountID or itemID matched)."
 	end
 
-	if entry.kind == "pet" then
+	checkers.pet = function(entry)
 		if not C_PetJournal then
 			return nil, "PetJournal API unavailable (try after fully logged in)."
 		end
@@ -408,7 +411,7 @@ function SC:CheckEntry(entry)
 
 	-- These two branches validate their id like every other kind does. Both APIs
 	-- error on a nil id, and the data file is where contributors add entries.
-	if entry.kind == "achievement" then
+	checkers.achievement = function(entry)
 		if type(entry.achievementID) ~= "number" then
 			return nil, "Achievement entry missing achievementID."
 		end
@@ -416,7 +419,7 @@ function SC:CheckEntry(entry)
 		return completed == true, "achievement"
 	end
 
-	if entry.kind == "quest" then
+	checkers.quest = function(entry)
 		if type(entry.questID) ~= "number" then
 			return nil, "Quest entry missing questID."
 		end
@@ -426,7 +429,7 @@ function SC:CheckEntry(entry)
 		return nil, "Quest API unavailable."
 	end
 
-	if entry.kind == "transmog" then
+	checkers.transmog = function(entry)
 		if not C_TransmogCollection then
 			return nil, "TransmogCollection API unavailable."
 		end
@@ -459,7 +462,7 @@ function SC:CheckEntry(entry)
 		return nil, "Appearance data has not finished loading yet."
 	end
 
-	if entry.kind == "housing" then
+	checkers.housing = function(entry)
 		if not C_HousingCatalog or not C_HousingCatalog.GetCatalogEntryInfoByItem then
 			return nil, "HousingCatalog API unavailable."
 		end
@@ -496,7 +499,7 @@ function SC:CheckEntry(entry)
 		return (subtype ~= 1), "housing"
 	end
 
-	if entry.kind == "mystery" then
+	checkers.mystery = function(entry)
 		if entry.steps and #entry.steps > 0 then
 			local allDone = true
 			for _, step in ipairs(entry.steps) do
@@ -512,11 +515,29 @@ function SC:CheckEntry(entry)
 		return nil, "Reward unknown – in active investigation"
 	end
 
-	if entry.kind == "manual" then
+	checkers.manual = function(entry)
 		return nil, entry.note or "Manual check"
 	end
+end
 
-	return nil, "Unknown kind"
+function SC:CheckEntry(entry)
+	-- Always check questID first — most secrets flag a hidden quest on completion,
+	-- and this is more reliable than API-specific checks (e.g. ensemble transmog
+	-- items). Hoisted out of the chain so it reads as the rule it is rather than
+	-- as the first of nine branches.
+	if type(entry.questID) == "number" and C_QuestLog and C_QuestLog.IsQuestFlaggedCompletedOnAccount then
+		if C_QuestLog.IsQuestFlaggedCompletedOnAccount(entry.questID) == true then
+			return true, "quest"
+		end
+	end
+
+	local checker = checkers[entry.kind]
+	if not checker then
+		-- Names the offending kind, where the chain's fall-through said only
+		-- "Unknown kind". /secrets validate reports these up front.
+		return nil, "Unknown kind: " .. tostring(entry.kind)
+	end
+	return checker(entry)
 end
 
 -- Returns the total count across step.itemID or any ID in step.itemIDs (whichever is set).
