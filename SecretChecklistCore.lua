@@ -74,19 +74,23 @@ local function GetFilteredEntries()
 	local mindSeekerOnly = f.mindSeekerOnly
 	local sortBy         = f.sortBy or "type"
 
+	-- No kind checked means no kind filter, by design: the type list acts as a
+	-- narrowing selection rather than a whitelist, so clearing it returns to the
+	-- unfiltered view instead of an empty one.
+	local anyKindEnabled = false
+	for _, v in pairs(filterKinds) do
+		if v then
+			anyKindEnabled = true
+			break
+		end
+	end
+
 	local filtered = {}
 	for _, entry in ipairs(entries) do
 		local shouldInclude = true
 
-		-- Filter by kind/type.
-		--
-		-- Deselecting every kind used to be treated as "show all", so the
-		-- Deselect All button did the opposite of what it says: the list came
-		-- back completely full. An empty selection now yields an empty list,
-		-- which is both what the button promises and what the filter count on
-		-- the dropdown already implies.
 		local entryKind = entry.kind or "unknown"
-		if not filterKinds[entryKind] then
+		if anyKindEnabled and not filterKinds[entryKind] then
 			shouldInclude = false
 		end
 
