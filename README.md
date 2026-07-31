@@ -14,19 +14,19 @@ A World of Warcraft addon that helps you track and check your progress on secret
 ## Features
 
 - **Minimap Button**: Quick access with a draggable minimap button
-- **Collections Journal Tab**: Beautiful UI integrated into WoW's Collections interface
+- **Collections-style Journal**: A standalone window styled after WoW's Collections interface
 - **Automated Checking**: Automatically checks your collection status for pre-defined secret collectibles
 - **Advanced Filtering**: Filter by status (All/Collected/Missing) and type (Mounts, Pets, Toys, Achievements, Quests, Transmog, Housing, Mysteries)
 - **Bulk Filter Controls**: Select All / Deselect All buttons for quick filter management; menu stays open while selecting
 - **Visual Feedback**: Icons are colored when collected, greyed out when missing
-- **Progress Bar**: Track your completion percentage across all filters
+- **Progress Counters**: Live "collected / total" counts for all secrets and for Mind-Seeker secrets
 - **Guides Tab**: Detailed view of each secret with description, wowhead guide link, and an interactive 3D model viewer
 - **Progress Steps**: Step-by-step walkthrough per secret with click-to-waypoint support (via TomTom or built-in arrow)
 - **3D Model Viewer**: Previews mounts, pets, transmog worn on your character, housing items, and weapons in a live model scene
 - **Click-to-Navigate**: Click any icon in the Overview to jump directly to its Guides entry; Ctrl+Click inserts an item or achievement link into your active chat box
 - **Mystery Category**: Track community secrets still being investigated (e.g. active discoveries from the Secret Finding Discord)
 - **Custom Lists**: Easily edit the list to track the secrets you want
-- **Pre-Configured**: Comes with 46 secrets ready to track
+- **Pre-Configured**: Comes with 52 secrets ready to track
 - **Live Requirement Checks**: Step progress automatically checks renown level, faction reputation, and Mind-Seeker secret count from the game API — shown inline as e.g. `(5 / 8)` when not yet complete
 - **About Tab**: Always-visible About tab with addon credits and community links
 
@@ -49,6 +49,8 @@ Both `/secrets` and `/secretchecklist` work as aliases:
 | `/secrets` | Open the SecretChecklist window |
 | `/secrets options` | Open the SecretChecklist options |
 | `/secrets minimap` | Toggle minimap button visibility |
+| `/secrets alert` | Fire a test collection toast |
+| `/secrets debug` | Toggle debug mode (shows per-step state on completed secrets) |
 
 - **Click an overview icon** to jump directly to that entry's full guide in the Guides tab
 - **Ctrl+Click an overview icon** to insert an item or achievement link into your active chat box
@@ -58,11 +60,11 @@ Both `/secrets` and `/secretchecklist` work as aliases:
 - **Status Filter**: Click the "Status: All" dropdown to show only Collected or Missing items
 - **Type Filter**: Click the "Filter" button to select which types to display (Mounts, Pets, Toys, etc.)
 - **Quick Actions**: Use "Select All" or "Deselect All" to quickly manage type filters
-- **Progress Bar**: Shows your overall completion percentage regardless of active filters
+- **Progress Counters**: Show your overall collected / total counts regardless of active filters
 
 ## Tracked Secrets
 
-Comes pre-configured with **46 secret collectibles** across mounts, pets, toys, achievements, transmog, quests, housing, and mysteries — with more being added regularly.
+Comes pre-configured with **52 secret collectibles** across mounts, pets, toys, achievements, transmog, quests, housing, and mysteries — with more being added regularly.
 
 ### Saving Your Preferences
 

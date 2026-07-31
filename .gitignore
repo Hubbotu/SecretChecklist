@@ -13,3 +13,7 @@ desktop.ini
 .vscode/
 .idea/
 *.sublime-*
+
+# BigWigs packager local output
+.release/
+*.zip

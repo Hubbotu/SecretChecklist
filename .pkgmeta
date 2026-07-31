@@ -3,9 +3,11 @@ package-as: SecretChecklist
 enable-nolib-creation: no
 
 ignore:
-  - README.txt
+  - README.md
   - .git
   - .gitignore
   - .github
+  - .luacheckrc
+  - .release
 
 license-output: LICENSE
