@@ -12,12 +12,18 @@ _G.SecretChecklist = SC
 -- SAVED VARIABLES
 -- ==============================================
 
-local DB_VERSION = 1
+-- Bumped to 2 because the first cut of this migration never ran: dbVersion was
+-- listed in DB_DEFAULTS, so the defaults loop stamped it to the current version
+-- *before* the migration gate read it, and every existing profile looked
+-- already-migrated. Profiles carrying that bogus stamp are cleaned by the
+-- version-2 gate below.
+local DB_VERSION = 2
 
--- Every key the addon persists, with its default. Anything not listed here is
--- either nested (tabFilters) or no longer used.
+-- Every key the addon persists, with its default.
+--
+-- dbVersion is deliberately NOT here: it must be read before defaults are
+-- applied, and is stamped once, after migrations have run.
 local DB_DEFAULTS = {
-	dbVersion            = DB_VERSION,
 	hideMinimapButton    = false,
 	hideAddonCompartment = false,
 	minimapAngle         = 225,
@@ -55,15 +61,22 @@ function SC:InitDB()
 	end
 	local db = SecretChecklistDB
 
+	-- Read the stored version BEFORE applying defaults. If dbVersion were seeded
+	-- as a default, every existing profile would be stamped current and skip
+	-- every migration below -- which is exactly what the first version of this
+	-- function did.
+	local fromVersion = db.dbVersion or 0
+
 	for key, default in pairs(DB_DEFAULTS) do
 		if db[key] == nil then
 			db[key] = (type(default) == "table") and {} or default
 		end
 	end
 
-	-- Migrations are ordered and each one bumps dbVersion. A fresh profile picks
-	-- up dbVersion from DB_DEFAULTS above and skips straight past them.
-	if (db.dbVersion or 0) < 1 then
+	-- Migrations are ordered and gated on the version the profile arrived with.
+	-- Each step is written to be idempotent, so a profile that took the bogus
+	-- version-1 stamp is corrected here rather than needing a separate step.
+	if fromVersion < 2 then
 		for _, key in ipairs(RETIRED_KEYS) do
 			db[key] = nil
 		end
@@ -88,8 +101,10 @@ function SC:InitDB()
 				end
 			end
 		end
-		db.dbVersion = 1
 	end
+
+	-- Stamped once, after every migration has had a chance to run.
+	db.dbVersion = DB_VERSION
 
 	return db
 end
