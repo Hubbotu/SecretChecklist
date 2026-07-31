@@ -81,9 +81,23 @@ local bh_frame   = CreateFrame("Frame")
 -- =============================================
 -- HELPERS
 -- =============================================
+-- There is no UnitCreatureID in the WoW API; the NPC id has to be parsed out of
+-- the unit GUID. GUID layout for NPCs is:
+--   Creature-0-<server>-<instance>-<zoneUID>-<npcID>-<spawnUID>
+-- Restricting to Creature/Vehicle avoids matching a player GUID whose server id
+-- happens to equal BH_NPC_ID.
+local function BH_GetNpcID(unit)
+    local guid = UnitGUID(unit)
+    if not guid then return nil end
+    local unitType, _, _, _, _, npcID = strsplit("-", guid)
+    if unitType == "Creature" or unitType == "Vehicle" then
+        return tonumber(npcID)
+    end
+    return nil
+end
+
 local function BH_IsTargetFlame()
-    local id = UnitCreatureID("target")
-    return id and tonumber(id) == BH_NPC_ID
+    return BH_GetNpcID("target") == BH_NPC_ID
 end
 
 local function BH_IsHallowfall()
