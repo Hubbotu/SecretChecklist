@@ -215,15 +215,34 @@ function SC:BuildOverviewPanel(frame, L)
 					end
 				end
 			elseif entry.kind == "achievement" and entry.achievementID then
-				-- Build the link with GetAchievementLink rather than by hand.
-				--
 				-- A full achievement link carries the achievement id, the player
 				-- GUID, a completed flag, the completion date and four criteria
 				-- fields. "achievement:<id>" supplies only the first, so the tooltip
 				-- has no GUID to resolve and sits on "Retrieving data" while it
 				-- waits for information that is never going to arrive.
 				local achLink = GetAchievementLink and GetAchievementLink(entry.achievementID)
-				success = TryTooltip("SetHyperlink", achLink or ("achievement:" .. entry.achievementID))
+				if achLink then
+					success = TryTooltip("SetHyperlink", achLink)
+				end
+				if not success then
+					-- GetAchievementLink returns nil for an achievement the player
+					-- has not earned, so linking is not an option for exactly the
+					-- entries a checklist most needs to describe. Falling back to
+					-- the malformed short link just reproduced "Retrieving data";
+					-- build the tooltip from the achievement's own fields instead.
+					local _, achName, _, completed, _, _, _, achDesc = GetAchievementInfo(entry.achievementID)
+					if achName then
+						GameTooltip:SetText(achName, 1, 1, 1)
+						if achDesc and achDesc ~= "" then
+							GameTooltip:AddLine(achDesc, 0.8, 0.8, 0.8, true)
+						end
+						GameTooltip:AddLine(
+							completed and (L["TOOLTIP_COMPLETED"] or "Completed")
+							or (L["TOOLTIP_NOT_COMPLETED"] or "Not completed"),
+							completed and 0 or 1, completed and 1 or 0, 0)
+						success = true
+					end
+				end
 			elseif entry.kind == "transmog" and entry.itemID then
 				success = TryTooltip("SetItemByID", entry.itemID)
 			elseif entry.kind == "housing" and entry.itemID then
