@@ -30,6 +30,25 @@ jobs:
       - name: Run luacheck
         run: luacheck . --no-color
 
+      # A malformed .xml is not a load error -- WoW logs a LUA_WARNING and
+      # silently skips every <Script> in the file. That took out all locale
+      # loading once, and the only visible symptom was English rendering
+      # correctly because every call site has an inline English fallback.
+      # An XML comment containing "--" is the easiest way to cause it.
+      - name: Validate XML
+        run: |
+          python3 - <<'PY'
+          import glob, sys, xml.etree.ElementTree as ET
+          bad = False
+          for path in sorted(glob.glob('**/*.xml', recursive=True)):
+              try:
+                  ET.parse(path)
+              except ET.ParseError as err:
+                  print("::error file=%s::%s" % (path, err))
+                  bad = True
+          sys.exit(1 if bad else 0)
+          PY
+
   package:
     name: Packager dry run
     runs-on: ubuntu-latest
