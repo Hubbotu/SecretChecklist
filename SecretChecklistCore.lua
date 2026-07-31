@@ -418,9 +418,6 @@ local function Initialize()
 		frame:SetPoint(pos.point, UIParent, pos.relPoint or pos.point, pos.x or 0, pos.y or 0)
 	end
 
-	-- OnMouseWheel below is only dispatched when wheel input is enabled; the XML
-	-- template enables mouse but not the wheel, so page scrolling never fired.
-	frame:EnableMouseWheel(true)
 
 	-- Hide attic for cleaner look (if function exists)
 	if ButtonFrameTemplate_HideAttic then

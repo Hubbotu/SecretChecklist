@@ -89,11 +89,15 @@ function SecretChecklist_AlertFrameMixin:OnLeave()
 end
 
 function SecretChecklist_AlertFrameMixin:OnClick(button, down)
-	-- Right-click dismisses the toast.
-	--
-	-- This used to delegate to AlertFrame_OnClick, a Classic-era global that
-	-- does not exist on retail. The `and` guard meant no error, but also meant
-	-- right-click did nothing at all.
+	-- Blizzard's own handler first: it owns dismissal, and returning the frame to
+	-- the alert sub-system's pool is its job, not ours. Verified in-game to exist
+	-- and to handle right-click, so this is the live path, not dead compatibility
+	-- code.
+	if AlertFrame_OnClick and AlertFrame_OnClick(self, button, down) then
+		return
+	end
+	-- Fallback for a client where that global is absent: dismiss directly rather
+	-- than leave right-click doing nothing.
 	if button == "RightButton" then
 		self:Hide()
 		return
