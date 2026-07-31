@@ -992,6 +992,13 @@ do
 		_refreshPending = true
 		C_Timer.After(0.1, function()
 			_refreshPending = false
+			-- Alert scanning runs inside the debounce, not per event. It walks all
+			-- 52 entries calling GetEntryStatus -> CheckEntry, which is 1-3 C API
+			-- calls each, and its triggers include PET_JOURNAL_LIST_UPDATE and
+			-- MOUNT_JOURNAL_SEARCH_UPDATED -- events that fire dozens of times a
+			-- second while the player scrolls or types in their Pet/Mount Journal.
+			-- Coalescing to one scan per 100ms burst is imperceptible for a toast.
+			if SC.CheckForNewCollections then SC:CheckForNewCollections() end
 			if frame:IsShown() and SC.currentTab == "overview" and SC.refreshOverviewDisplay then
 				SC.refreshOverviewDisplay(frame.currentPage or 1)
 			end
@@ -1013,7 +1020,6 @@ do
 	collectionFrame:RegisterEvent("QUEST_TURNED_IN")
 	collectionFrame:SetScript("OnEvent", function()
 		ScheduleCollectionRefresh()
-		if SC.CheckForNewCollections then SC:CheckForNewCollections() end
 	end)
 
 	-- Housing catalog loads asynchronously and storage data (ownership) is only
