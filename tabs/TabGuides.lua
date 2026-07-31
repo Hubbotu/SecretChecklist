@@ -1144,8 +1144,16 @@ function SC:BuildGuidesPanel(frame, L)
 		local h = GP_PAD + 48 + 8                                                                         -- top padding + icon row + gap below icon
 		h = h + 14 + 4                                                                                    -- kind badge
 		h = h + 16 + 6                                                                                    -- status line
-		if hasSource then h = h + 40 + 6 end                                                              -- source  (~2 wrapped lines)
-		if hasDesc then h = h + 60 + 6 end                                                                -- desc    (~4 wrapped lines)
+		-- Source and description are measured, not estimated.
+		--
+		-- These used to add a flat 40 and 60 px, annotated "~2 wrapped lines" and
+		-- "~4 wrapped lines". Both are word-wrapped to the pane width, so the real
+		-- height depends on the text, the font and the locale: a long mount
+		-- description wrapped past the estimate and got clipped, a one-line source
+		-- left a gap. The step labels a few lines down already use
+		-- GetStringHeight, so this only makes the function consistent with itself.
+		if hasSource then h = h + math_max(detailSource:GetStringHeight(), 14) + 6 end
+		if hasDesc then h = h + math_max(detailDesc:GetStringHeight(), 14) + 6 end
 		for i, r in ipairs(requiresRows) do if r:IsShown() then h = h + (i == 1 and 6 or 3) + 20 end end  -- requires link rows
 		for i, r in ipairs(requiredForRows) do if r:IsShown() then h = h + (i == 1 and 4 or 3) + 20 end end -- requiredFor link rows
 		if numSteps > 0 then
