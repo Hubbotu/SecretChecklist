@@ -93,6 +93,7 @@ read_globals = {
 	"GetAchievementInfo",
 	"GetAchievementLink",
 	"GetAddOnMetadata",
+	"IsEquippedItem", -- deprecated global; used only as a fallback for C_Item.IsEquippedItem
 	"PlayerHasToy",
 
 	-- Units, group and player state

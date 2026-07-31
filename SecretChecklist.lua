@@ -516,6 +516,70 @@ local function StepItemCount(step)
 	return 0
 end
 
+-- True when the collectible a step's item unlocks is already owned.
+--
+-- "Claim the collectible" steps name the item that grants it -- a pet cage, a
+-- mount item, an ensemble, a decor item. Every one of those is consumed the
+-- moment it is used, so GetItemCount reads 0 from then on and the step can
+-- never show done on its own merits. It stays red forever after being
+-- completed, which is only masked because stepsOverrideOnDone paints all steps
+-- green once the parent entry is collected -- so the step check is wrong and
+-- invisible at the same time, and becomes visible the moment debug mode turns
+-- that override off.
+--
+-- Toys and housing were already handled here; mounts, appearances and pets were
+-- not. Pets take an explicit step.speciesID rather than resolving one from the
+-- item, because the field position of speciesID in GetPetInfoByItemID's return
+-- list is not worth depending on.
+local function StepCollectibleOwned(step)
+	local itemID = step.itemID
+	if type(itemID) ~= "number" then return false end
+
+	if PlayerHasToy and PlayerHasToy(itemID) then return true end
+
+	if step.speciesID and C_PetJournal and C_PetJournal.GetNumCollectedInfo then
+		local numOwned = C_PetJournal.GetNumCollectedInfo(step.speciesID)
+		if numOwned and numOwned > 0 then return true end
+	end
+
+	if C_MountJournal and C_MountJournal.GetMountFromItem and C_MountJournal.GetMountInfoByID then
+		local mountID = C_MountJournal.GetMountFromItem(itemID)
+		if type(mountID) == "number" then
+			if select(11, C_MountJournal.GetMountInfoByID(mountID)) == true then return true end
+		end
+	end
+
+	if C_TransmogCollection and C_TransmogCollection.PlayerHasTransmog
+			and C_TransmogCollection.PlayerHasTransmog(itemID) == true then
+		return true
+	end
+
+	-- Housing items go to the catalog, not to bags, on purchase.
+	if C_HousingCatalog and C_HousingCatalog.GetCatalogEntryInfoByItem then
+		local ok, hinfo = pcall(C_HousingCatalog.GetCatalogEntryInfoByItem, itemID, true)
+		if ok and hinfo then
+			local hTotal = (hinfo.totalNumStored or 0) + (hinfo.numPlaced or 0) + (hinfo.totalNumPlaced or 0)
+			if hTotal > 0 then return true end
+		end
+	end
+
+	return false
+end
+
+-- True when the step's item is currently equipped.
+--
+-- GetItemCount counts bags and banks but not equipped slots, so a step that
+-- reads "obtain X and equip it" flips back to missing the instant the player
+-- does the second half of what it asked -- unless they happen to be carrying a
+-- spare.
+local function StepItemEquipped(step)
+	if type(step.itemID) ~= "number" then return false end
+	local isEquipped = (C_Item and C_Item.IsEquippedItem) or IsEquippedItem
+	if not isEquipped then return false end
+	local ok, equipped = pcall(isEquipped, step.itemID)
+	return ok and equipped == true
+end
+
 -- Returns the status of a single progress step:
 --   "done"    – quest flagged completed
 --   "ready"   – quest not done, but item(s) are in bags/bank
@@ -575,14 +639,14 @@ function SC:GetStepStatus(step)
 			if not step.questID then return "done" end
 			return "ready"
 		end
-		if step.itemID and PlayerHasToy and PlayerHasToy(step.itemID) then return "done" end
-		-- Housing items go to the catalog (not bags) on purchase — check ownership there.
-		if step.itemID and C_HousingCatalog and C_HousingCatalog.GetCatalogEntryInfoByItem then
-			local ok, hinfo = pcall(C_HousingCatalog.GetCatalogEntryInfoByItem, step.itemID, true)
-			if ok and hinfo then
-				local hTotal = (hinfo.totalNumStored or 0) + (hinfo.numPlaced or 0) + (hinfo.totalNumPlaced or 0)
-				if hTotal > 0 then return "done" end
-			end
+		-- Not in bags. That is not the same as not done: the item may have been
+		-- consumed into the collection it unlocks, or be equipped right now.
+		if StepCollectibleOwned(step) then return "done" end
+		if StepItemEquipped(step) then
+			-- Same rule as the in-bags branch above: with a questID the item is a
+			-- prerequisite being held, without one, having it is the completion.
+			if not step.questID then return "done" end
+			return "ready"
 		end
 	end
 	return "missing"
