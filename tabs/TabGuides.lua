@@ -1003,9 +1003,12 @@ function SC:BuildGuidesPanel(frame, L)
 						subsH = subsH + srH + 2
 					end
 				end
-				local panelH = STEP_NOTE_PAD
-						+ (textH > 0 and textH or (numSubs > 0 and 0 or 46))
-						+ STEP_NOTE_PAD
+				-- textH is the measured height of the note text, already 0 when the
+				-- step has no note. The old expression substituted a hardcoded 46
+				-- in that case (unless there were substeps), which is why a step
+				-- whose panel holds only a Set Waypoint button rendered with ~46px
+				-- of empty space above it.
+				local panelH = STEP_NOTE_PAD + textH + STEP_NOTE_PAD
 				if numSubs > 0 then panelH = panelH + subsH end
 				if np.itemBtn:IsShown() then panelH = panelH + 4 + 16 end
 				if np.wpBtn:IsShown() then panelH = panelH + 4 + 16 end
