@@ -692,66 +692,8 @@ function SC:BuildGuidesPanel(frame, L)
 	end)
 	linkBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
-	-- Copy-link popup (UIParent child so it floats above the addon frame)
-	local copyDialog = CreateFrame("Frame", nil, UIParent)
-	copyDialog:SetSize(305, 52)
-	copyDialog:SetFrameStrata("FULLSCREEN_DIALOG")
-	copyDialog:SetFrameLevel(100)
-	copyDialog:SetClampedToScreen(true)
-	copyDialog:Hide()
-
-	local copyBg = copyDialog:CreateTexture(nil, "BACKGROUND")
-	copyBg:SetAllPoints()
-	copyBg:SetColorTexture(0.05, 0.05, 0.08, 0.95)
-
-	local copyBorderLine = copyDialog:CreateTexture(nil, "BORDER")
-	copyBorderLine:SetPoint("TOPLEFT", copyDialog, "TOPLEFT", 1, -1)
-	copyBorderLine:SetPoint("BOTTOMRIGHT", copyDialog, "BOTTOMRIGHT", -1, 1)
-	copyBorderLine:SetColorTexture(0.35, 0.30, 0.18, 0.9)
-
-	local copyLabel = copyDialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	copyLabel:SetPoint("TOPLEFT", copyDialog, "TOPLEFT", 8, -5)
-	copyLabel:SetText("Ctrl+C to copy  ·  Esc to close")
-	copyLabel:SetTextColor(0.65, 0.65, 0.65)
-
-	local copyBox = CreateFrame("EditBox", nil, copyDialog)
-	copyBox:SetPoint("BOTTOMLEFT", copyDialog, "BOTTOMLEFT", 8, 6)
-	copyBox:SetPoint("BOTTOMRIGHT", copyDialog, "BOTTOMRIGHT", -8, 6)
-	copyBox:SetHeight(24)
-	copyBox:SetAutoFocus(true)
-	copyBox:SetMaxLetters(512)
-	copyBox:SetFontObject("ChatFontNormal")
-	copyBox:SetJustifyH("LEFT")
-	copyBox:SetTextInsets(4, 4, 2, 2)
-	local copyBoxBg = copyBox:CreateTexture(nil, "BACKGROUND")
-	copyBoxBg:SetAllPoints()
-	copyBoxBg:SetColorTexture(0.1, 0.1, 0.15, 0.95)
-	copyBox:SetScript("OnEscapePressed", function() copyDialog:Hide() end)
-	copyBox:SetScript("OnEnterPressed", function() copyDialog:Hide() end)
-	copyBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
-	copyBox:SetScript("OnTextChanged", function(self, userInput)
-		if userInput then
-			self:SetText(copyDialog.currentURL or "")
-			self:HighlightText()
-		end
-	end)
-
 	linkBtn:SetScript("OnClick", function(self)
-		local url = self.currentURL or ""
-		if url == "" then return end
-		copyDialog.currentURL = url
-		copyDialog:ClearAllPoints()
-		-- Convert button screen position to UIParent coordinate space so the
-		-- popup stays put when the main frame is dragged
-		local bx, by = self:GetCenter()
-		local scale  = self:GetEffectiveScale() / UIParent:GetEffectiveScale()
-		copyDialog:SetPoint("TOP", UIParent, "BOTTOMLEFT",
-			bx * scale,
-			(by - self:GetHeight() * 0.5) * scale - 4)
-		copyBox:SetText(url)
-		copyDialog:Show()
-		copyBox:SetFocus()
-		copyBox:HighlightText()
+		SC:ShowCopyDialog(self, self.currentURL)
 	end)
 
 	-- ==============================================
@@ -1204,7 +1146,7 @@ function SC:BuildGuidesPanel(frame, L)
 			reqLastWidget = detailDesc
 			linkBtn.currentURL = ""
 			linkBtn:SetEnabled(false)
-			copyDialog:Hide()
+			SC:HideCopyDialog()
 			for _, row in ipairs(stepRows) do
 				row:Hide()
 				row.notePanel:Hide()

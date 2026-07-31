@@ -93,53 +93,6 @@ function SC:BuildAboutPanel(frame, L)
 	discordText:SetTextColor(0.4, 0.78, 1)
 	discordText:SetText(L["ABOUT_DISCORD_LABEL"] or "Secret Finding Discord")
 
-	-- Custom copy popup (same pattern as the Wowhead button in TabGuides)
-	local copyDialog = CreateFrame("Frame", nil, UIParent)
-	copyDialog:SetSize(305, 52)
-	copyDialog:SetFrameStrata("FULLSCREEN_DIALOG")
-	copyDialog:SetFrameLevel(100)
-	copyDialog:SetClampedToScreen(true)
-	copyDialog:Hide()
-
-	local copyBg = copyDialog:CreateTexture(nil, "BACKGROUND")
-	copyBg:SetAllPoints()
-	copyBg:SetColorTexture(0.05, 0.05, 0.08, 0.95)
-
-	local copyBorderLine = copyDialog:CreateTexture(nil, "BORDER")
-	copyBorderLine:SetPoint("TOPLEFT", copyDialog, "TOPLEFT", 1, -1)
-	copyBorderLine:SetPoint("BOTTOMRIGHT", copyDialog, "BOTTOMRIGHT", -1, 1)
-	copyBorderLine:SetColorTexture(0.35, 0.30, 0.18, 0.9)
-
-	local copyLabel = copyDialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	copyLabel:SetPoint("TOPLEFT", copyDialog, "TOPLEFT", 8, -5)
-	copyLabel:SetText("Ctrl+C to copy  ·  Esc to close")
-	copyLabel:SetTextColor(0.65, 0.65, 0.65)
-
-	local copyBox = CreateFrame("EditBox", nil, copyDialog)
-	copyBox:SetPoint("BOTTOMLEFT", copyDialog, "BOTTOMLEFT", 8, 6)
-	copyBox:SetPoint("BOTTOMRIGHT", copyDialog, "BOTTOMRIGHT", -8, 6)
-	copyBox:SetHeight(24)
-	copyBox:SetAutoFocus(true)
-	copyBox:SetMaxLetters(512)
-	copyBox:SetFontObject("ChatFontNormal")
-	copyBox:SetJustifyH("LEFT")
-	copyBox:SetTextInsets(4, 4, 2, 2)
-	local copyBoxBg = copyBox:CreateTexture(nil, "BACKGROUND")
-	copyBoxBg:SetAllPoints()
-	copyBoxBg:SetColorTexture(0.1, 0.1, 0.15, 0.95)
-	copyBox:SetScript("OnEscapePressed", function() copyDialog:Hide() end)
-	copyBox:SetScript("OnEnterPressed", function() copyDialog:Hide() end)
-	copyBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
-	-- Restore whichever URL the dialog was opened for. This used to hardcode
-	-- discordURL, so typing in the box after opening it from the Warcraft
-	-- Secrets button snapped the text back to the Discord link.
-	copyBox:SetScript("OnTextChanged", function(self, userInput)
-		if userInput then
-			self:SetText(copyDialog.currentURL or "")
-			self:HighlightText()
-		end
-	end)
-
 	discordBtn:SetScript("OnEnter", function(self)
 		discordText:SetTextColor(0.6, 0.92, 1)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -152,17 +105,7 @@ function SC:BuildAboutPanel(frame, L)
 		GameTooltip:Hide()
 	end)
 	discordBtn:SetScript("OnClick", function(self)
-		copyDialog:ClearAllPoints()
-		local bx, by = self:GetCenter()
-		local scale  = self:GetEffectiveScale() / UIParent:GetEffectiveScale()
-		copyDialog:SetPoint("TOP", UIParent, "BOTTOMLEFT",
-			bx * scale,
-			(by - self:GetHeight() * 0.5) * scale - 4)
-		copyDialog.currentURL = discordURL
-		copyBox:SetText(discordURL)
-		copyDialog:Show()
-		copyBox:SetFocus()
-		copyBox:HighlightText()
+		SC:ShowCopyDialog(self, discordURL)
 	end)
 
 	-- Warcraft Secrets thanks
@@ -185,7 +128,6 @@ function SC:BuildAboutPanel(frame, L)
 	wsBtnText:SetTextColor(1, 0.6, 0.2)
 	wsBtnText:SetText("warcraft-secrets.com")
 
-	-- Reuse copyDialog for Warcraft Secrets link (update copyBox text on click)
 	wsBtn:SetScript("OnEnter", function(self)
 		wsBtnText:SetTextColor(1, 0.78, 0.4)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -198,16 +140,6 @@ function SC:BuildAboutPanel(frame, L)
 		GameTooltip:Hide()
 	end)
 	wsBtn:SetScript("OnClick", function(self)
-		copyDialog:ClearAllPoints()
-		local bx, by = self:GetCenter()
-		local scale  = self:GetEffectiveScale() / UIParent:GetEffectiveScale()
-		copyDialog:SetPoint("TOP", UIParent, "BOTTOMLEFT",
-			bx * scale,
-			(by - self:GetHeight() * 0.5) * scale - 4)
-		copyDialog.currentURL = wsURL
-		copyBox:SetText(wsURL)
-		copyDialog:Show()
-		copyBox:SetFocus()
-		copyBox:HighlightText()
+		SC:ShowCopyDialog(self, wsURL)
 	end)
 end -- SC:BuildAboutPanel
