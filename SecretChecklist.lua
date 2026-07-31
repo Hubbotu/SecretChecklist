@@ -147,8 +147,20 @@ function SC:GetEntryName(entry)
 	return "Unknown"
 end
 
+-- Intentionally a no-op, kept as a stable call site for the panel files.
+--
+-- This used to call C_MountJournal.SetDefaultFilters / C_PetJournal.SetDefaultFilters
+-- / C_ToyBox.ForceToyRefilter to "prime" the journals. Those are mutators, not
+-- getters: every page turn, tab switch and filter change silently reset the
+-- player's own Collections journal filters, and fought with addons that persist
+-- journal state (Collectionator, BetterWardrobe, AllTheThings). They also fed a
+-- MOUNT_JOURNAL_SEARCH_UPDATED -> refresh loop that had to be worked around in
+-- TabOverview.
+--
+-- None of it was needed: GetMountInfoByID, GetNumCollectedInfo and PlayerHasToy
+-- read account collection data directly and do not depend on journal filter
+-- state or on the Collections UI having been opened.
 function SC:RefreshCaches()
-	self:EnsureCollectionsLoaded()
 end
 
 function SC:GetEntryStatus(entry)
@@ -167,20 +179,6 @@ function SC:GetEntryStatus(entry)
 		return "missing", detail
 	end
 	return "unknown", detail
-end
-
-function SC:EnsureCollectionsLoaded()
-	-- Rely on collection APIs directly (some clients don't ship Blizzard_Collections as a loadable addon).
-	local apis = {
-		{ C_ToyBox,       "ForceToyRefilter" },
-		{ C_MountJournal, "SetDefaultFilters" },
-		{ C_PetJournal,   "SetDefaultFilters" }
-	}
-	for _, api in ipairs(apis) do
-		if api[1] and api[1][api[2]] then
-			pcall(api[1][api[2]])
-		end
-	end
 end
 
 function SC:CheckEntry(entry)
@@ -206,7 +204,7 @@ function SC:CheckEntry(entry)
 		if C_ToyBox and C_ToyBox.GetToyInfo then
 			local toyName = C_ToyBox.GetToyInfo(entry.itemID)
 			if toyName == nil then
-				return nil, "ToyBox data not loaded/cached yet. Open Collections → Toys once (then rerun)."
+				return nil, "Toy data has not finished loading yet."
 			end
 		end
 		return false, "toy"
@@ -221,7 +219,7 @@ function SC:CheckEntry(entry)
 		if type(entry.mountID) == "number" then
 			local isCollected = select(11, C_MountJournal.GetMountInfoByID(entry.mountID))
 			if isCollected == nil then
-				return nil, "Mount journal data not ready yet. Try /secrets wait or open Collections → Mounts once."
+				return nil, "Mount data has not finished loading yet."
 			end
 			return isCollected == true, "mount"
 		end
@@ -233,7 +231,7 @@ function SC:CheckEntry(entry)
 		if type(mountID) == "number" then
 			local isCollected = select(11, C_MountJournal.GetMountInfoByID(mountID))
 			if isCollected == nil then
-				return nil, "Mount journal data not ready yet. Try /secrets wait or open Collections → Mounts once."
+				return nil, "Mount data has not finished loading yet."
 			end
 			return isCollected == true, "mount"
 		end
@@ -254,7 +252,7 @@ function SC:CheckEntry(entry)
 		end
 		local numOwned = select(1, C_PetJournal.GetNumCollectedInfo(entry.speciesID))
 		if numOwned == nil then
-			return nil, "Pet journal data not ready yet. Open Collections → Pets once."
+			return nil, "Pet data has not finished loading yet."
 		end
 		return numOwned > 0, "pet"
 	end
@@ -290,7 +288,7 @@ function SC:CheckEntry(entry)
 		if isCollected ~= nil then
 			return isCollected == true, "transmog"
 		end
-		return nil, "Transmog data not loaded yet. Open Collections → Appearances once."
+		return nil, "Appearance data has not finished loading yet."
 	end
 
 	if entry.kind == "housing" then
