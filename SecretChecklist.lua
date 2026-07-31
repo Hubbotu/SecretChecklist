@@ -30,6 +30,8 @@ local DB_DEFAULTS = {
 	alertsEnabled        = true,
 	guidesStyle          = "sidetabs",
 	debugMode            = false,
+	-- framePos is deliberately absent: nil means "never moved", which is what
+	-- tells Initialize to leave the XML's centred anchor alone.
 	-- theme / themeUserSet are deliberately absent: nil is meaningful for both
 	-- (it is what the ElvUI / EllesmereUI auto-select checks for on first run).
 	tabFilters           = {},

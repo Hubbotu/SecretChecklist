@@ -424,7 +424,27 @@ local function Initialize()
 	frame:SetClampedToScreen(true)
 	frame:RegisterForDrag("LeftButton")
 	frame:SetScript("OnDragStart", frame.StartMoving)
-	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+	-- Persist where the player put the window. Dragging worked before but the
+	-- result was never saved, so the frame snapped back to centre every reload.
+	frame:SetScript("OnDragStop", function(self)
+		self:StopMovingOrSizing()
+		local point, _, relPoint, x, y = self:GetPoint()
+		if point then
+			SecretChecklistDB.framePos = { point = point, relPoint = relPoint, x = x, y = y }
+		end
+	end)
+
+	-- Restore it. Anchored to UIParent rather than to whatever GetPoint returned
+	-- as the relative frame, so a saved position cannot outlive its anchor.
+	local pos = SecretChecklistDB.framePos
+	if pos and pos.point then
+		frame:ClearAllPoints()
+		frame:SetPoint(pos.point, UIParent, pos.relPoint or pos.point, pos.x or 0, pos.y or 0)
+	end
+
+	-- OnMouseWheel below is only dispatched when wheel input is enabled; the XML
+	-- template enables mouse but not the wheel, so page scrolling never fired.
+	frame:EnableMouseWheel(true)
 
 	-- Hide attic for cleaner look (if function exists)
 	if ButtonFrameTemplate_HideAttic then

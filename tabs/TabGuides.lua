@@ -407,6 +407,11 @@ function SC:BuildGuidesPanel(frame, L)
 	detailScrollBar:SetScript("OnValueChanged", function(_, val)
 		detailScroll:SetVerticalScroll(val)
 	end)
+	-- A bare CreateFrame("ScrollFrame") does not accept wheel input, so the
+	-- handler below was never dispatched and the detail pane could only be
+	-- scrolled by dragging its scrollbar. (listPane, the other scroll region in
+	-- this file, already called this.)
+	detailScroll:EnableMouseWheel(true)
 	detailScroll:SetScript("OnMouseWheel", function(_, delta)
 		local _, maxV = detailScrollBar:GetMinMaxValues()
 		local newVal  = math_max(0, math_min(maxV, detailScrollBar:GetValue() - delta * 30))
