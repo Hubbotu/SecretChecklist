@@ -590,30 +590,6 @@ function SC:BuildGuidesPanel(frame, L)
 	-- ==============================================
 
 	local STEP_ROW_H = 18
-	local MAX_STEPS
-	do
-		local maxFound = 0
-		for _, e in ipairs(SC.entries or {}) do
-			local steps = e.steps
-			if steps and #steps > maxFound then maxFound = #steps end
-		end
-		MAX_STEPS = math_max(maxFound, 1)
-	end
-
-	local MAX_SUBSTEPS
-	do
-		local maxSubs = 0
-		for _, e in ipairs(SC.entries or {}) do
-			if e.steps then
-				for _, s in ipairs(e.steps) do
-					if s.substeps and #s.substeps > maxSubs then
-						maxSubs = #s.substeps
-					end
-				end
-			end
-		end
-		MAX_SUBSTEPS = maxSubs
-	end
 
 	-- Forward-declare so step-row OnClick closures can reference these before they are defined below.
 	local Guides_RelayoutSteps, Guides_UpdateDetailScroll
@@ -621,8 +597,23 @@ function SC:BuildGuidesPanel(frame, L)
 	local STEP_NOTE_PAD    = 5    -- vertical padding inside note panel
 	local stepsCollapsed   = false -- expanded by default; auto-collapsed for collected entries
 
-	local stepRows         = {}
-	for i = 1, MAX_STEPS do
+	-- Step rows and their substep rows are built on demand and then reused.
+	--
+	-- This used to be a pre-allocated cross-product: the largest entry has 31
+	-- steps and the largest single step has 13 substeps, so 31 step rows were
+	-- built at load, each carrying 13 substep rows, each of those carrying a
+	-- nested waypoint button -- roughly 2,900 frames and regions created before
+	-- the window had ever been opened, for a data set where only 10 of 52 entries
+	-- have substeps at all. It also grew quadratically: one new long secret moved
+	-- the whole product.
+	--
+	-- Creating on demand means a session that browses five secrets builds a few
+	-- dozen rows. It also removes the truncation bug in the old scheme, where the
+	-- substep cap was measured from `substeps` only and silently dropped rows for
+	-- any longer `factionSubsteps` list.
+	local stepRows = {}
+
+	local function CreateStepRow()
 		-- ---- Header row ----
 		local row = CreateFrame("Button", nil, detailContent)
 		row:SetHeight(STEP_ROW_H)
@@ -737,9 +728,12 @@ function SC:BuildGuidesPanel(frame, L)
 		wpBtn:Hide()
 		np.wpBtn = wpBtn
 
-		-- Substep row pool (pre-allocated; used when step.substeps is set)
-		local substepRows_pool = {}
-		for j = 1, MAX_SUBSTEPS do
+		-- Substep rows are created by GetSubstepRow below, the first time a step
+		-- displayed in this row actually has that many substeps.
+		np.substepRows      = {}
+		np.numSubstepsShown = 0
+
+		np.CreateSubstepRow = function()
 			local sr = CreateFrame("Button", nil, np)
 			sr:SetHeight(16)
 			local srIco = sr:CreateTexture(nil, "ARTWORK")
@@ -807,10 +801,8 @@ function SC:BuildGuidesPanel(frame, L)
 			end)
 			sr:SetScript("OnLeave", function() GameTooltip:Hide() end)
 			sr:Hide()
-			substepRows_pool[j] = sr
+			return sr
 		end
-		np.substepRows      = substepRows_pool
-		np.numSubstepsShown = 0
 
 		row.notePanel       = np
 		row.isOpen          = false
@@ -823,9 +815,27 @@ function SC:BuildGuidesPanel(frame, L)
 		end)
 
 		row:Hide()
-		stepRows[i] = row
+		return row
 	end
-	-- (Row TOPLEFT anchors are set dynamically by Guides_RelayoutSteps.)
+
+	-- Row TOPLEFT anchors are set dynamically by Guides_RelayoutSteps.
+	local function GetStepRow(i)
+		local row = stepRows[i]
+		if not row then
+			row = CreateStepRow()
+			stepRows[i] = row
+		end
+		return row
+	end
+
+	local function GetSubstepRow(np, j)
+		local sr = np.substepRows[j]
+		if not sr then
+			sr = np.CreateSubstepRow()
+			np.substepRows[j] = sr
+		end
+		return sr
+	end
 
 	-- Steps header: "Progress  X / Y  steps" — clickable to expand/collapse all steps
 	local stepsHeader = CreateFrame("Button", nil, detailContent)
@@ -1048,11 +1058,16 @@ function SC:BuildGuidesPanel(frame, L)
 			linkBtn.currentURL = ""
 			linkBtn:SetEnabled(false)
 			copyDialog:Hide()
-			for i = 1, MAX_STEPS do
-				stepRows[i]:Hide()
-				stepRows[i].notePanel:Hide()
-				stepRows[i].isOpen = false
+			for _, row in ipairs(stepRows) do
+				row:Hide()
+				row.notePanel:Hide()
+				row.isOpen = false
 			end
+			-- Rows are now created on demand, so currentNumSteps is what tells the
+			-- relayout and collapse paths how far into stepRows it is safe to index.
+			-- Leaving it at the previous entry's count would let those walk past the
+			-- rows that actually exist.
+			currentNumSteps = 0
 			stepsHeader:Hide()
 			detailModel:Hide()
 			detailModelScene:Hide()
@@ -1218,11 +1233,16 @@ function SC:BuildGuidesPanel(frame, L)
 		local entryDone = (entry.stepsOverrideOnDone ~= false) and not SecretChecklistDB.debugMode and SC.GetEntryStatus and
 		(SC:GetEntryStatus(entry)) == "collected"
 		local doneCount = 0
-		for i = 1, MAX_STEPS do
-			local step = steps and steps[i]
-			local row  = stepRows[i]
+		for i = 1, numSteps do
+			local step = steps[i]
+			local row  = GetStepRow(i)
 			local np   = row.notePanel
-			if step then
+			-- The loop used to run to a fixed MAX_STEPS with an `if step then`
+			-- guard and an else-branch that hid the surplus. It now runs to
+			-- numSteps, and the surplus is retired in a separate pass after this
+			-- loop. This bare do-block is what the guard collapsed to; it is kept
+			-- rather than dedented purely so the diff stays reviewable.
+			do
 				-- Pre-compute substep progress for label + substep row rendering
 				local resolvedSubs = SC:ResolveSubsteps(step)
 				local subsDone, subsTotal
@@ -1268,16 +1288,15 @@ function SC:BuildGuidesPanel(frame, L)
 				end
 				-- Populate note panel
 				np.noteLbl:SetText(step.note or "")
-				-- Substep rows
-				local substepRows = np.substepRows
-				local numSubstepsCap = substepRows and #substepRows or 0
+				-- Substep rows. No cap: rows are created as the list needs them, so a
+				-- factionSubsteps list longer than any plain substeps list no longer
+				-- gets silently truncated.
 				local numSubstepsShown = 0
 				local lastSubstepFrame = nil
-				if resolvedSubs and numSubstepsCap > 0 then
+				if resolvedSubs then
 					local prevSRAnchor = np.noteLbl
 					for j, sub in ipairs(resolvedSubs) do
-						if j > numSubstepsCap then break end
-						local sr = substepRows[j]
+						local sr = GetSubstepRow(np, j)
 						local srDone, srReady = false, false
 						if st == "done" then
 							srDone = true
@@ -1354,8 +1373,8 @@ function SC:BuildGuidesPanel(frame, L)
 						lastSubstepFrame = sr
 					end
 				end
-				for j = numSubstepsShown + 1, numSubstepsCap do
-					substepRows[j]:Hide()
+				for j = numSubstepsShown + 1, #np.substepRows do
+					np.substepRows[j]:Hide()
 				end
 				np.numSubstepsShown = numSubstepsShown
 				-- Item hyperlink (only when item is cached; returns nil otherwise)
@@ -1429,12 +1448,15 @@ function SC:BuildGuidesPanel(frame, L)
 				row.arrowLbl:SetText("+")
 				np:Hide()
 				row:Hide() -- hidden until the steps header is expanded
-			else
-				row.hasNote = false
-				row.isOpen  = false
-				np:Hide()
-				row:Hide()
 			end
+		end
+		-- Retire rows left over from a previously displayed entry that had more steps.
+		for i = numSteps + 1, #stepRows do
+			local row = stepRows[i]
+			row.hasNote = false
+			row.isOpen  = false
+			row.notePanel:Hide()
+			row:Hide()
 		end
 		if numSteps > 0 then
 			-- Collapse by default when the secret is already collected
