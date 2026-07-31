@@ -1730,9 +1730,12 @@ function SC:BuildGuidesPanel(frame, L)
 	-- Call SC.ApplyGuideStyle("horizontal") or SC.ApplyGuideStyle("sidetabs")
 	-- from anywhere (e.g. the filter dropdown) to toggle live, no reload needed.
 	-- ==============================================
-	local function ApplyGuideStyle(style)
+	-- persist=true records the choice in SavedVariables; the initial call below
+	-- passes false so constructing the panel does not overwrite the value that
+	-- PLAYER_LOGIN is about to read back.
+	local function ApplyGuideStyle(style, persist)
 		guidesStyle = style or "sidetabs"
-		if SecretChecklistDB then
+		if persist and SecretChecklistDB then
 			SecretChecklistDB.guidesStyle = guidesStyle
 		end
 		-- Capture current model state from whichever style was previously active
@@ -1752,7 +1755,8 @@ function SC:BuildGuidesPanel(frame, L)
 		SetModelTabEnabled(hadModel)
 		SwitchDetailTab(activeDetailTab)
 	end
-	SC.ApplyGuideStyle = ApplyGuideStyle
+	-- Public entry point: a style set through here is a deliberate choice, so it persists.
+	SC.ApplyGuideStyle = function(style) ApplyGuideStyle(style, true) end
 
 	guidesPanel:SetScript("OnShow", function()
 		SC:RefreshCaches()
@@ -1789,6 +1793,7 @@ function SC:BuildGuidesPanel(frame, L)
 	end)
 
 	-- Initial style applied at PLAYER_LOGIN (deferred so SavedVariables are committed);
-	-- set a neutral starting state here (sidetabs is the default).
-	ApplyGuideStyle("sidetabs")
+	-- set a neutral starting state here (sidetabs is the default). persist=false:
+	-- writing the default here would overwrite the saved value before login reads it.
+	ApplyGuideStyle("sidetabs", false)
 end -- SC:BuildGuidesPanel
