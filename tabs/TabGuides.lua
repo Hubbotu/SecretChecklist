@@ -160,15 +160,33 @@ function SC:BuildGuidesPanel(frame, L)
 	-- the name, the kind, the source and description shown in the detail pane,
 	-- and the step labels and notes. Searching only names would miss "Kosumoth"
 	-- or "Tazavesh", which are how people actually refer to these secrets.
+	local function Matches(value, term)
+		return type(value) == "string" and value:lower():find(term, 1, true) ~= nil
+	end
+
 	local function EntryMatchesSearch(entry, term)
-		local name = SC:GetEntryName(entry)
-		if name and name:lower():find(term, 1, true) then return true end
-		for _, field in ipairs({ entry.kind, entry.source, entry.desc, entry.partOf }) do
-			if type(field) == "string" and field:lower():find(term, 1, true) then return true end
-		end
+		-- Both names matter. GetEntryName returns the game's own localised name
+		-- ("Hungering Claw"), while entry.name is the data file's, which carries
+		-- the disambiguators people actually search for -- "Hungering Claw
+		-- (Kosumoth)".
+		if Matches(SC:GetEntryName(entry), term) then return true end
+		if Matches(entry.name, term) then return true end
+		if Matches(entry.kind, term) then return true end
+		if Matches(entry.source, term) then return true end
+		if Matches(entry.desc, term) then return true end
+		if Matches(entry.partOf, term) then return true end
+		if Matches(entry.stepsRef, term) then return true end
+
+		-- Checked one by one rather than by iterating a list of them: most of
+		-- these fields are absent on most entries, and ipairs stops dead at the
+		-- first nil. Collecting them into a table meant an entry with no `source`
+		-- never had its `partOf` looked at -- which is exactly why searching
+		-- "kosumoth" found Fathom Dweller but not Hungering Claw.
 		for _, step in ipairs(entry.steps or {}) do
-			if type(step.label) == "string" and step.label:lower():find(term, 1, true) then return true end
-			if type(step.note) == "string" and step.note:lower():find(term, 1, true) then return true end
+			if Matches(step.label, term) or Matches(step.note, term) then return true end
+			for _, sub in ipairs(step.substeps or {}) do
+				if Matches(sub.label, term) or Matches(sub.note, term) then return true end
+			end
 		end
 		return false
 	end
