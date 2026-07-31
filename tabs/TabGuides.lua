@@ -160,8 +160,15 @@ function SC:BuildGuidesPanel(frame, L)
 	-- the name, the kind, the source and description shown in the detail pane,
 	-- and the step labels and notes. Searching only names would miss "Kosumoth"
 	-- or "Tazavesh", which are how people actually refer to these secrets.
+	-- Matches the term against the value and, on a translated client, against its
+	-- translation too. Searching only the rendered text would leave a player
+	-- unable to find a secret by a name they saw on Wowhead; searching only the
+	-- English would make the search box useless in their own language.
 	local function Matches(value, term)
-		return type(value) == "string" and value:lower():find(term, 1, true) ~= nil
+		if type(value) ~= "string" then return false end
+		if value:lower():find(term, 1, true) then return true end
+		local translated = SC:T(value)
+		return translated ~= value and translated:lower():find(term, 1, true) ~= nil
 	end
 
 	local function EntryMatchesSearch(entry, term)
@@ -1314,17 +1321,17 @@ function SC:BuildGuidesPanel(frame, L)
 				doneCount = doneCount + 1
 				SetStatusMarker(row.ico, "collected", 10, 0, 1, 0)
 				row.lbl:SetTextColor(0.53, 0.53, 0.53)
-				row.lbl:SetText(step.label)
+				row.lbl:SetText(SC:T(step.label))
 			elseif st == "ready" then
 				-- "ready" stays a gold square: it means the item is held but not
 				-- yet used, which is a third state neither glyph expresses.
 				SetStatusMarker(row.ico, nil, 10, 1, 0.82, 0)
 				row.lbl:SetTextColor(1, 0.82, 0)
-				row.lbl:SetText(step.label)
+				row.lbl:SetText(SC:T(step.label))
 			else
 				SetStatusMarker(row.ico, "missing", 10, 1, 0, 0)
 				row.lbl:SetTextColor(0.8, 0.8, 0.8)
-				local labelText = step.label
+				local labelText = SC:T(step.label)
 				if step.mindseekerReq then
 					local count = 0
 					for _, e in ipairs(SC.entries or {}) do
@@ -1348,7 +1355,7 @@ function SC:BuildGuidesPanel(frame, L)
 				row.lbl:SetText(labelText)
 			end
 			-- Populate note panel
-			np.noteLbl:SetText(step.note or "")
+			np.noteLbl:SetText(SC:T(step.note) or "")
 			-- Substep rows. No cap: rows are created as the list needs them, so a
 			-- factionSubsteps list longer than any plain substeps list no longer
 			-- gets silently truncated.
@@ -1393,7 +1400,7 @@ function SC:BuildGuidesPanel(frame, L)
 					end
 					if sub.itemID then
 						local _, itemLink = C_Item.GetItemInfo(sub.itemID)
-						local displayText = itemLink or sub.label
+						local displayText = itemLink or SC:T(sub.label)
 						if sub.count and sub.count > 1 then
 							local have = C_Item.GetItemCount(sub.itemID, true, nil, nil, true)
 							displayText = displayText .. "  (" .. math_min(have, sub.count) .. " / " .. sub.count .. ")"
@@ -1401,7 +1408,7 @@ function SC:BuildGuidesPanel(frame, L)
 						sr.lbl:SetText(displayText)
 						sr.itemLink = itemLink
 					else
-						sr.lbl:SetText(sub.label)
+						sr.lbl:SetText(SC:T(sub.label))
 						sr.itemLink = nil
 					end
 					-- Substep waypoint pin
@@ -1632,11 +1639,11 @@ function SC:BuildGuidesPanel(frame, L)
 			end
 		end
 		-- Entry-level overrides (for toys and any entry with hand-authored data)
-		if type(entry.source) == "string" and entry.source ~= "" then sourceText = entry.source end
-		if type(entry.desc) == "string" and entry.desc ~= "" then descText = entry.desc end
+		if type(entry.source) == "string" and entry.source ~= "" then sourceText = SC:T(entry.source) end
+		if type(entry.desc) == "string" and entry.desc ~= "" then descText = SC:T(entry.desc) end
 		-- "Part of" cross-reference shown at top of the source field
 		if type(entry.partOf) == "string" and entry.partOf ~= "" then
-			local prefix = "Part of: " .. entry.partOf
+			local prefix = "Part of: " .. SC:T(entry.partOf)
 			sourceText = sourceText ~= "" and (prefix .. "\n" .. sourceText) or prefix
 		end
 		detailSource:SetText(sourceText)

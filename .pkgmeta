@@ -9,5 +9,6 @@ ignore:
   - .github
   - .luacheckrc
   - .release
+  - tools
 
 license-output: LICENSE

@@ -149,6 +149,40 @@ function SecretChecklist_OnAddonCompartmentLeave(button, addonInfo)
 	GameTooltip:Hide()
 end
 
+-- ==============================================
+-- DATA STRINGS
+-- ==============================================
+--
+-- Step labels, notes, sources and descriptions live in data/SecretEntries.lua
+-- as plain English. Unlike the UI strings in localisation/, they have no keys --
+-- there are 794 of them and inventing an id per string would put the burden on
+-- whoever adds a secret rather than on whoever translates one.
+--
+-- So the English text is the key, the way gettext does it. A locale file maps
+-- the English to its translation and anything unmapped renders as written, so a
+-- half-finished translation degrades string by string instead of all at once,
+-- and the data file needs no changes at all.
+--
+-- The tradeoff: editing an English string orphans its translation. That is the
+-- price of needing no keys, and tools/extract-strings.py re-runs to show which
+-- strings are newly unmatched.
+local dataLocale
+
+function SC:T(text)
+	if type(text) ~= "string" then return text end
+	if dataLocale == nil then
+		-- Resolved once. `false` records "no locale table" so this never
+		-- re-reads the global on a client with no translation loaded.
+		dataLocale = _G.SecretChecklistDataLocale or false
+	end
+	if not dataLocale then return text end
+	local translated = dataLocale[text]
+	-- Generated locale files pre-seed every string with "", so an untranslated
+	-- entry is empty rather than absent. Both mean "use the English".
+	if translated and translated ~= "" then return translated end
+	return text
+end
+
 -- Entries are now defined in data/SecretEntries.lua
 
 -- ==============================================
@@ -252,8 +286,11 @@ function SC:GetEntryName(entry)
 	end
 
 	-- Fall back to hardcoded name in data file
+	-- Translated for display only. entry.name is also the key that requires /
+	-- requiredFor / stepsRef / partOf resolve against, and those comparisons use
+	-- the raw field -- translating here would not break them.
 	if type(entry.name) == "string" and entry.name ~= "" then
-		return entry.name
+		return SC:T(entry.name)
 	end
 
 	return "Unknown"

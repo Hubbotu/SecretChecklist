@@ -13,4 +13,12 @@
   <Script file="koKR.lua"/>
   <Script file="zhCN.lua"/>
   <Script file="zhTW.lua"/>
+  <!--
+    Data strings (step labels, notes, sources, descriptions). Keyed by their
+    English text rather than by an id -- see SC:T in SecretChecklist.lua.
+    Generated and refreshed by tools/extract-strings.py; each file returns
+    immediately unless its locale is active.
+  -->
+  <Script file="data\deDE.lua"/>
+  <Script file="data\ruRU.lua"/>
 </Ui>
