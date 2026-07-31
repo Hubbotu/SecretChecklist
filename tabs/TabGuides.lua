@@ -1132,6 +1132,406 @@ function SC:BuildGuidesPanel(frame, L)
 		end
 	end
 
+	-- Sets up the 3-D viewers for an entry.
+	--
+	-- Three viewers share the model pane and exactly one is shown: detailModel
+	-- (mounts, pets, floating weapons), detailModelZoomed (worn armour, needs a
+	-- dressed player), and detailModelScene (housing decor, whose asset is a file
+	-- id rather than a display id). Extracted from Guides_ShowDetail, where it was
+	-- the last of eight unrelated jobs in one 560-line function.
+	local function Guides_ShowModel(entry)
+	-- Hide model strip for kinds that never have a 3-D model
+	if entry.kind == "achievement" or entry.kind == "quest"
+			or entry.kind == "toy" or entry.kind == "mystery" then
+		detailModel:Hide()
+		detailModelScene:Hide()
+		detailModelZoomed:Hide()
+		SetModelTabEnabled(false)
+		return
+	end
+
+	-- Reset both viewers; each block below shows exactly one
+	detailModelScene:ClearScene()
+	detailModelScene:Hide()
+	detailModelZoomed.cameraID = nil
+	detailModelZoomed:Hide()
+	detailModel:ClearModel()
+	detailModel:SetUnit("none")
+	detailModel:RefreshCamera()
+	detailModel.cameraID    = nil
+	detailModel.modelFacing = 0
+	detailModel.camScale    = 1
+	detailModel:SetFacing(0)
+	detailModel:SetCamDistanceScale(1)
+	detailModel:Hide()
+	local modelSet = false
+
+	if entry.kind == "mount" then
+		local mountID = entry.mountID
+		if not mountID and entry.itemID and C_MountJournal and C_MountJournal.GetMountFromItem then
+			mountID = C_MountJournal.GetMountFromItem(entry.itemID)
+		end
+		if mountID and C_MountJournal and C_MountJournal.GetMountInfoExtraByID then
+			local creatureDisplayID = C_MountJournal.GetMountInfoExtraByID(mountID)
+			if creatureDisplayID and creatureDisplayID > 0 then
+				detailModel:SetDisplayInfo(creatureDisplayID)
+				detailModel:SetCamera(1)
+				detailModel:SetFacing(math_rad(30))
+				if entry.camScale then
+					detailModel:SetCamDistanceScale(entry.camScale)
+				end
+				modelSet = true
+			end
+		end
+	elseif entry.kind == "pet" and C_PetJournal then
+		local creatureDisplayID
+		if entry.itemID and C_PetJournal.GetPetInfoByItemID then
+			local _, _, _, _, _, _, _, _, _, _, _, displayID = C_PetJournal.GetPetInfoByItemID(entry.itemID)
+			creatureDisplayID = displayID
+		end
+		if (not creatureDisplayID or creatureDisplayID == 0) and entry.speciesID and C_PetJournal.GetPetInfoBySpeciesID then
+			local _, _, _, _, _, _, _, _, _, _, _, displayID = C_PetJournal.GetPetInfoBySpeciesID(entry.speciesID)
+			creatureDisplayID = displayID
+		end
+		if creatureDisplayID and creatureDisplayID > 0 then
+			detailModel:SetDisplayInfo(creatureDisplayID)
+			detailModel.modelFacing = math_rad(20)
+			detailModel.camScale    = 1.25
+			detailModel:SetFacing(detailModel.modelFacing)
+			detailModel:SetCamDistanceScale(detailModel.camScale)
+			modelSet = true
+		end
+	elseif entry.kind == "transmog" and entry.itemID then
+		-- Determine inventory type so weapons can be shown without a player body
+		local invType = select(4, C_Item.GetItemInfoInstant(entry.itemID))
+		local appearanceID = C_TransmogCollection and C_TransmogCollection.GetItemInfo(entry.itemID)
+		local cameraID = appearanceID and C_TransmogCollection.GetAppearanceCameraID(appearanceID)
+		if cameraID == 0 then cameraID = nil end -- 0 is truthy in Lua but means no camera
+		local heldSlots = {
+			INVTYPE_WEAPON = true,
+			INVTYPE_2HWEAPON = true,
+			INVTYPE_WEAPONMAINHAND = true,
+			INVTYPE_WEAPONOFFHAND = true,
+			INVTYPE_RANGED = true,
+			INVTYPE_RANGEDRIGHT = true,
+			INVTYPE_HOLDABLE = true,
+			INVTYPE_SHIELD = true,
+		}
+		if heldSlots[invType] then
+			-- Weapon/held: display the item floating alone, no player body
+			detailModel.cameraID = cameraID
+			if cameraID and Model_ApplyUICamera then
+				Model_ApplyUICamera(detailModel, cameraID)
+				detailModel:SetAnimation(0, 0)
+			end
+			if appearanceID then
+				detailModel:SetItemAppearance(appearanceID)
+			else
+				detailModel:SetItem(entry.itemID)
+			end
+			modelSet = true
+		else
+			-- Worn armor: mirrors AppearanceTooltip's Zoomed model flow exactly.
+			-- SetKeepModelOnHide keeps the player loaded so TryOn works synchronously.
+			detailModelZoomed.cameraID = cameraID
+			detailModelZoomed:SetUnit("player")
+			detailModelZoomed:Dress()
+			if cameraID and Model_ApplyUICamera then
+				Model_ApplyUICamera(detailModelZoomed, cameraID)
+				detailModelZoomed:SetAnimation(0, 0)
+			end
+			detailModelZoomed:TryOn("item:" .. entry.itemID)
+			detailModelZoomed:Show()
+			-- modelSet stays false; detailModel hidden, detailModelZoomed shown above
+		end
+	elseif entry.kind == "housing" and entry.itemID then
+		if C_HousingCatalog and C_HousingCatalog.GetCatalogEntryInfoByItem then
+			local info = C_HousingCatalog.GetCatalogEntryInfoByItem(entry.itemID, false)
+			if info and info.asset and info.asset > 0 then
+				detailModelScene:ClearScene()
+				detailModelScene:SetViewInsets(0, 0, 0, 0)
+				detailModelScene:TransitionToModelSceneID(HOUSING_SCENE_ID, CAMERA_TRANSITION_TYPE_IMMEDIATE,
+					CAMERA_MODIFICATION_TYPE_DISCARD, true)
+				local actor = detailModelScene:GetActorByTag("decor") or detailModelScene:CreateActor("decor")
+				if actor then
+					actor:SetPreferModelCollisionBounds(true)
+					actor:SetModelByFileID(info.asset)
+				end
+				detailModelScene:Show()
+			end
+		end
+	end
+
+	detailModel:SetShown(modelSet)
+	-- detailModelScene and detailModelZoomed visibility set explicitly in blocks above
+	SetModelTabEnabled(modelSet or detailModelZoomed:IsShown() or detailModelScene:IsShown())
+	end
+
+	-- Renders the progress steps for an entry and returns how many there are.
+	--
+	-- Resolves stepsRef (an entry may delegate its steps to another), decides
+	-- each step's state, fills the note panels, substep rows, item links and
+	-- waypoint buttons, and sets the collapsible header.
+	local function Guides_ShowSteps(entry)
+	-- ---- Progress Steps ----
+	-- Resolve stepsRef: if this entry delegates its steps to another entry, find that entry.
+	local stepsEntry = entry
+	if entry.stepsRef then
+		for _, e in ipairs(SC.entries or {}) do
+			if e.name == entry.stepsRef then
+				stepsEntry = e; break
+			end
+		end
+	end
+	local steps = stepsEntry.steps
+	local numSteps = steps and #steps or 0
+	currentNumSteps = numSteps
+	-- Force all steps green once the entry itself is complete (default behaviour for all entries).
+	-- Set stepsOverrideOnDone = false on a specific entry to opt out of this behaviour.
+	-- When debug mode is active the override is suppressed so individual step states remain visible.
+	local entryDone = (entry.stepsOverrideOnDone ~= false) and not SecretChecklistDB.debugMode and SC.GetEntryStatus and
+	(SC:GetEntryStatus(entry)) == "collected"
+	local doneCount = 0
+	for i = 1, numSteps do
+		local step = steps[i]
+		local row  = GetStepRow(i)
+		local np   = row.notePanel
+		-- The loop used to run to a fixed MAX_STEPS with an `if step then`
+		-- guard and an else-branch that hid the surplus. It now runs to
+		-- numSteps, and the surplus is retired in a separate pass after this
+		-- loop. This bare do-block is what the guard collapsed to; it is kept
+		-- rather than dedented purely so the diff stays reviewable.
+		do
+			-- Pre-compute substep progress for label + substep row rendering
+			local resolvedSubs = SC:ResolveSubsteps(step)
+			local subsDone, subsTotal
+			if resolvedSubs then
+				subsDone, subsTotal = SC:GetSubstepProgress(step)
+			end
+			local st = entryDone and "done" or (SC:GetStepStatus(step) or "missing")
+			-- Status dot colour + label text colour
+			if st == "done" then
+				doneCount = doneCount + 1
+				SetStatusMarker(row.ico, "collected", 10, 0, 1, 0)
+				row.lbl:SetTextColor(0.53, 0.53, 0.53)
+				row.lbl:SetText(step.label)
+			elseif st == "ready" then
+				-- "ready" stays a gold square: it means the item is held but not
+				-- yet used, which is a third state neither glyph expresses.
+				SetStatusMarker(row.ico, nil, 10, 1, 0.82, 0)
+				row.lbl:SetTextColor(1, 0.82, 0)
+				row.lbl:SetText(step.label)
+			else
+				SetStatusMarker(row.ico, "missing", 10, 1, 0, 0)
+				row.lbl:SetTextColor(0.8, 0.8, 0.8)
+				local labelText = step.label
+				if step.mindseekerReq then
+					local count = 0
+					for _, e in ipairs(SC.entries or {}) do
+						if e.mindSeeker and SC:GetEntryStatus(e) == "collected" then
+							count = count + 1
+						end
+					end
+					labelText = labelText .. "  (" .. count .. " / " .. step.mindseekerReq .. " secrets)"
+				elseif step.renownReq and C_MajorFactions and C_MajorFactions.GetCurrentRenownLevel then
+					local current = C_MajorFactions.GetCurrentRenownLevel(step.renownReq.factionID) or 0
+					labelText = labelText .. "  (" .. current .. " / " .. step.renownReq.level .. ")"
+				elseif step.repReq then
+					local data = C_Reputation and C_Reputation.GetFactionDataByID and
+					C_Reputation.GetFactionDataByID(step.repReq.factionID)
+					local current = (data and data.reaction) or 0
+					local target = step.repReq.standingName or step.repReq.standingID
+					labelText = labelText .. "  (Rank " .. current .. " / " .. target .. ")"
+				elseif resolvedSubs then
+					labelText = labelText .. "  (" .. subsDone .. " / " .. subsTotal .. ")"
+				end
+				row.lbl:SetText(labelText)
+			end
+			-- Populate note panel
+			np.noteLbl:SetText(step.note or "")
+			-- Substep rows. No cap: rows are created as the list needs them, so a
+			-- factionSubsteps list longer than any plain substeps list no longer
+			-- gets silently truncated.
+			local numSubstepsShown = 0
+			local lastSubstepFrame = nil
+			if resolvedSubs then
+				local prevSRAnchor = np.noteLbl
+				for j, sub in ipairs(resolvedSubs) do
+					local sr = GetSubstepRow(np, j)
+					local srDone, srReady = false, false
+					if st == "done" then
+						srDone = true
+					elseif step.chain then
+						if subsDone > 0 then
+							if j < subsDone then
+								srDone = true
+							elseif j == subsDone then
+								srReady = true
+							end
+						end
+					else
+						if sub.questID and C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted then
+							srDone = C_QuestLog.IsQuestFlaggedCompleted(sub.questID)
+						elseif sub.itemID then
+							local have = C_Item.GetItemCount(sub.itemID, true, nil, nil, true)
+							if sub.count then
+								srDone = have >= sub.count
+							else
+								srDone = have >= 1
+							end
+						end
+					end
+					if srDone then
+						SetStatusMarker(sr.ico, "collected", 8, 0, 0.8, 0)
+						sr.lbl:SetTextColor(0.50, 0.50, 0.50)
+					elseif srReady then
+						SetStatusMarker(sr.ico, nil, 8, 1, 0.82, 0)
+						sr.lbl:SetTextColor(1, 0.82, 0)
+					else
+						SetStatusMarker(sr.ico, "missing", 8, 0.8, 0.2, 0.2)
+						sr.lbl:SetTextColor(0.80, 0.80, 0.80)
+					end
+					if sub.itemID then
+						local _, itemLink = C_Item.GetItemInfo(sub.itemID)
+						local displayText = itemLink or sub.label
+						if sub.count and sub.count > 1 then
+							local have = C_Item.GetItemCount(sub.itemID, true, nil, nil, true)
+							displayText = displayText .. "  (" .. math_min(have, sub.count) .. " / " .. sub.count .. ")"
+						end
+						sr.lbl:SetText(displayText)
+						sr.itemLink = itemLink
+					else
+						sr.lbl:SetText(sub.label)
+						sr.itemLink = nil
+					end
+					-- Substep waypoint pin
+					if sub.waypoints then
+						sr.wpBtn.waypoints = sub.waypoints
+						sr.wpBtn.waypoint  = nil
+						sr.wpBtn:Show()
+					else
+						sr.wpBtn.waypoints = nil
+						local resolvedSubWp = sub.waypoint
+						if sub.factionWaypoint then
+							local fkey = (UnitFactionGroup and UnitFactionGroup("player") == "Alliance") and "alliance" or "horde"
+							resolvedSubWp = sub.factionWaypoint[fkey] or resolvedSubWp
+						end
+						if resolvedSubWp then
+							sr.wpBtn.waypoint = resolvedSubWp
+							sr.wpBtn:Show()
+						else
+							sr.wpBtn.waypoint = nil
+							sr.wpBtn:Hide()
+						end
+					end
+					sr:ClearAllPoints()
+					sr:SetPoint("TOP", prevSRAnchor, "BOTTOM", 0, -2)
+					sr:SetPoint("LEFT", np.noteLbl, "LEFT", 14, 0)
+					sr:SetPoint("RIGHT", np, "RIGHT", -6, 0)
+					sr:Show()
+					prevSRAnchor = sr
+					numSubstepsShown = numSubstepsShown + 1
+					lastSubstepFrame = sr
+				end
+			end
+			for j = numSubstepsShown + 1, #np.substepRows do
+				np.substepRows[j]:Hide()
+			end
+			np.numSubstepsShown = numSubstepsShown
+			-- Item hyperlink (only when item is cached; returns nil otherwise)
+			local itemBtn = np.itemBtn
+			local displayItemID = step.itemID
+			if not displayItemID and step.itemIDs then
+				displayItemID = step.itemIDs[#step.itemIDs] -- show the final/filled item
+			end
+			if displayItemID then
+				local _, itemLink = C_Item.GetItemInfo(displayItemID)
+				if itemLink then
+					local display = itemLink
+					if step.count and step.count > 1 then
+						display = itemLink .. "  ×" .. step.count
+					end
+					itemBtn.lbl:SetText(display)
+					itemBtn.itemLink = itemLink
+					local itemBtnAnchor = lastSubstepFrame or np.noteLbl
+					itemBtn:SetPoint("TOPLEFT", itemBtnAnchor, "BOTTOMLEFT", 0, -4)
+					itemBtn:SetPoint("RIGHT", np, "RIGHT", -6, 0)
+					itemBtn:Show()
+				else
+					itemBtn.itemLink = nil
+					itemBtn:Hide()
+				end
+			else
+				itemBtn.itemLink = nil
+				itemBtn:Hide()
+			end
+			-- Waypoint button
+			local wpBtn = np.wpBtn
+			if step.waypoints then
+				wpBtn.waypoints = step.waypoints
+				wpBtn.waypoint  = nil
+				wpBtn.lbl:SetText("Set All Waypoints")
+				local wpAnchor = itemBtn:IsShown() and itemBtn or (lastSubstepFrame or np.noteLbl)
+				wpBtn:SetPoint("TOPLEFT", wpAnchor, "BOTTOMLEFT", 0, -4)
+				wpBtn:SetPoint("RIGHT", np, "RIGHT", -6, 0)
+				wpBtn:Show()
+			elseif step.waypoint then
+				wpBtn.waypoint  = step.waypoint
+				wpBtn.waypoints = nil
+				wpBtn.lbl:SetText("Set Waypoint")
+				local wpAnchor = itemBtn:IsShown() and itemBtn or (lastSubstepFrame or np.noteLbl)
+				wpBtn:SetPoint("TOPLEFT", wpAnchor, "BOTTOMLEFT", 0, -4)
+				wpBtn:SetPoint("RIGHT", np, "RIGHT", -6, 0)
+				wpBtn:Show()
+			elseif step.factionWaypoint then
+				local fkey      = (UnitFactionGroup and UnitFactionGroup("player") == "Alliance") and "alliance" or "horde"
+				wpBtn.waypoint  = step.factionWaypoint[fkey]
+				wpBtn.waypoints = nil
+				wpBtn.lbl:SetText("Set Waypoint")
+				local wpAnchor = itemBtn:IsShown() and itemBtn or (lastSubstepFrame or np.noteLbl)
+				wpBtn:SetPoint("TOPLEFT", wpAnchor, "BOTTOMLEFT", 0, -4)
+				wpBtn:SetPoint("RIGHT", np, "RIGHT", -6, 0)
+				wpBtn:Show()
+			else
+				wpBtn.waypoint  = nil
+				wpBtn.waypoints = nil
+				wpBtn:Hide()
+			end
+			-- Show expand arrow only when there is something to reveal in the note panel
+			local hasNote = (step.note and step.note ~= "")
+					or (resolvedSubs and #resolvedSubs > 0)
+					or itemBtn:IsShown()
+					or wpBtn:IsShown()
+			row.hasNote = hasNote
+			row.arrowLbl:SetShown(hasNote)
+			-- Always reset collapse state when loading a new entry
+			row.isOpen = false
+			row.arrowLbl:SetText("+")
+			np:Hide()
+			row:Hide() -- hidden until the steps header is expanded
+		end
+	end
+	-- Retire rows left over from a previously displayed entry that had more steps.
+	for i = numSteps + 1, #stepRows do
+		local row = stepRows[i]
+		row.hasNote = false
+		row.isOpen  = false
+		row.notePanel:Hide()
+		row:Hide()
+	end
+	if numSteps > 0 then
+		-- Collapse by default when the secret is already collected
+		stepsCollapsed = (SC:GetEntryStatus(entry) == "collected")
+		local prefix = stepsCollapsed and "+ " or "- "
+		stepsHeader.lbl:SetText(prefix .. "Progress  " .. doneCount .. " / " .. numSteps .. "  steps")
+		stepsHeader:Show()
+	else
+		stepsHeader:Hide()
+	end
+	return numSteps
+	-- ---- End Progress Steps ----
+	end
+
 	Guides_ShowDetail = function(entry)
 		guides_selected = entry
 		if not entry then
@@ -1303,389 +1703,13 @@ function SC:BuildGuidesPanel(frame, L)
 			prevReqWidget = row
 			reqLastWidget = row
 		end
-		-- ---- Progress Steps ----
-		-- Resolve stepsRef: if this entry delegates its steps to another entry, find that entry.
-		local stepsEntry = entry
-		if entry.stepsRef then
-			for _, e in ipairs(SC.entries or {}) do
-				if e.name == entry.stepsRef then
-					stepsEntry = e; break
-				end
-			end
-		end
-		local steps = stepsEntry.steps
-		local numSteps = steps and #steps or 0
-		currentNumSteps = numSteps
-		-- Force all steps green once the entry itself is complete (default behaviour for all entries).
-		-- Set stepsOverrideOnDone = false on a specific entry to opt out of this behaviour.
-		-- When debug mode is active the override is suppressed so individual step states remain visible.
-		local entryDone = (entry.stepsOverrideOnDone ~= false) and not SecretChecklistDB.debugMode and SC.GetEntryStatus and
-		(SC:GetEntryStatus(entry)) == "collected"
-		local doneCount = 0
-		for i = 1, numSteps do
-			local step = steps[i]
-			local row  = GetStepRow(i)
-			local np   = row.notePanel
-			-- The loop used to run to a fixed MAX_STEPS with an `if step then`
-			-- guard and an else-branch that hid the surplus. It now runs to
-			-- numSteps, and the surplus is retired in a separate pass after this
-			-- loop. This bare do-block is what the guard collapsed to; it is kept
-			-- rather than dedented purely so the diff stays reviewable.
-			do
-				-- Pre-compute substep progress for label + substep row rendering
-				local resolvedSubs = SC:ResolveSubsteps(step)
-				local subsDone, subsTotal
-				if resolvedSubs then
-					subsDone, subsTotal = SC:GetSubstepProgress(step)
-				end
-				local st = entryDone and "done" or (SC:GetStepStatus(step) or "missing")
-				-- Status dot colour + label text colour
-				if st == "done" then
-					doneCount = doneCount + 1
-					SetStatusMarker(row.ico, "collected", 10, 0, 1, 0)
-					row.lbl:SetTextColor(0.53, 0.53, 0.53)
-					row.lbl:SetText(step.label)
-				elseif st == "ready" then
-					-- "ready" stays a gold square: it means the item is held but not
-					-- yet used, which is a third state neither glyph expresses.
-					SetStatusMarker(row.ico, nil, 10, 1, 0.82, 0)
-					row.lbl:SetTextColor(1, 0.82, 0)
-					row.lbl:SetText(step.label)
-				else
-					SetStatusMarker(row.ico, "missing", 10, 1, 0, 0)
-					row.lbl:SetTextColor(0.8, 0.8, 0.8)
-					local labelText = step.label
-					if step.mindseekerReq then
-						local count = 0
-						for _, e in ipairs(SC.entries or {}) do
-							if e.mindSeeker and SC:GetEntryStatus(e) == "collected" then
-								count = count + 1
-							end
-						end
-						labelText = labelText .. "  (" .. count .. " / " .. step.mindseekerReq .. " secrets)"
-					elseif step.renownReq and C_MajorFactions and C_MajorFactions.GetCurrentRenownLevel then
-						local current = C_MajorFactions.GetCurrentRenownLevel(step.renownReq.factionID) or 0
-						labelText = labelText .. "  (" .. current .. " / " .. step.renownReq.level .. ")"
-					elseif step.repReq then
-						local data = C_Reputation and C_Reputation.GetFactionDataByID and
-						C_Reputation.GetFactionDataByID(step.repReq.factionID)
-						local current = (data and data.reaction) or 0
-						local target = step.repReq.standingName or step.repReq.standingID
-						labelText = labelText .. "  (Rank " .. current .. " / " .. target .. ")"
-					elseif resolvedSubs then
-						labelText = labelText .. "  (" .. subsDone .. " / " .. subsTotal .. ")"
-					end
-					row.lbl:SetText(labelText)
-				end
-				-- Populate note panel
-				np.noteLbl:SetText(step.note or "")
-				-- Substep rows. No cap: rows are created as the list needs them, so a
-				-- factionSubsteps list longer than any plain substeps list no longer
-				-- gets silently truncated.
-				local numSubstepsShown = 0
-				local lastSubstepFrame = nil
-				if resolvedSubs then
-					local prevSRAnchor = np.noteLbl
-					for j, sub in ipairs(resolvedSubs) do
-						local sr = GetSubstepRow(np, j)
-						local srDone, srReady = false, false
-						if st == "done" then
-							srDone = true
-						elseif step.chain then
-							if subsDone > 0 then
-								if j < subsDone then
-									srDone = true
-								elseif j == subsDone then
-									srReady = true
-								end
-							end
-						else
-							if sub.questID and C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted then
-								srDone = C_QuestLog.IsQuestFlaggedCompleted(sub.questID)
-							elseif sub.itemID then
-								local have = C_Item.GetItemCount(sub.itemID, true, nil, nil, true)
-								if sub.count then
-									srDone = have >= sub.count
-								else
-									srDone = have >= 1
-								end
-							end
-						end
-						if srDone then
-							SetStatusMarker(sr.ico, "collected", 8, 0, 0.8, 0)
-							sr.lbl:SetTextColor(0.50, 0.50, 0.50)
-						elseif srReady then
-							SetStatusMarker(sr.ico, nil, 8, 1, 0.82, 0)
-							sr.lbl:SetTextColor(1, 0.82, 0)
-						else
-							SetStatusMarker(sr.ico, "missing", 8, 0.8, 0.2, 0.2)
-							sr.lbl:SetTextColor(0.80, 0.80, 0.80)
-						end
-						if sub.itemID then
-							local _, itemLink = C_Item.GetItemInfo(sub.itemID)
-							local displayText = itemLink or sub.label
-							if sub.count and sub.count > 1 then
-								local have = C_Item.GetItemCount(sub.itemID, true, nil, nil, true)
-								displayText = displayText .. "  (" .. math_min(have, sub.count) .. " / " .. sub.count .. ")"
-							end
-							sr.lbl:SetText(displayText)
-							sr.itemLink = itemLink
-						else
-							sr.lbl:SetText(sub.label)
-							sr.itemLink = nil
-						end
-						-- Substep waypoint pin
-						if sub.waypoints then
-							sr.wpBtn.waypoints = sub.waypoints
-							sr.wpBtn.waypoint  = nil
-							sr.wpBtn:Show()
-						else
-							sr.wpBtn.waypoints = nil
-							local resolvedSubWp = sub.waypoint
-							if sub.factionWaypoint then
-								local fkey = (UnitFactionGroup and UnitFactionGroup("player") == "Alliance") and "alliance" or "horde"
-								resolvedSubWp = sub.factionWaypoint[fkey] or resolvedSubWp
-							end
-							if resolvedSubWp then
-								sr.wpBtn.waypoint = resolvedSubWp
-								sr.wpBtn:Show()
-							else
-								sr.wpBtn.waypoint = nil
-								sr.wpBtn:Hide()
-							end
-						end
-						sr:ClearAllPoints()
-						sr:SetPoint("TOP", prevSRAnchor, "BOTTOM", 0, -2)
-						sr:SetPoint("LEFT", np.noteLbl, "LEFT", 14, 0)
-						sr:SetPoint("RIGHT", np, "RIGHT", -6, 0)
-						sr:Show()
-						prevSRAnchor = sr
-						numSubstepsShown = numSubstepsShown + 1
-						lastSubstepFrame = sr
-					end
-				end
-				for j = numSubstepsShown + 1, #np.substepRows do
-					np.substepRows[j]:Hide()
-				end
-				np.numSubstepsShown = numSubstepsShown
-				-- Item hyperlink (only when item is cached; returns nil otherwise)
-				local itemBtn = np.itemBtn
-				local displayItemID = step.itemID
-				if not displayItemID and step.itemIDs then
-					displayItemID = step.itemIDs[#step.itemIDs] -- show the final/filled item
-				end
-				if displayItemID then
-					local _, itemLink = C_Item.GetItemInfo(displayItemID)
-					if itemLink then
-						local display = itemLink
-						if step.count and step.count > 1 then
-							display = itemLink .. "  ×" .. step.count
-						end
-						itemBtn.lbl:SetText(display)
-						itemBtn.itemLink = itemLink
-						local itemBtnAnchor = lastSubstepFrame or np.noteLbl
-						itemBtn:SetPoint("TOPLEFT", itemBtnAnchor, "BOTTOMLEFT", 0, -4)
-						itemBtn:SetPoint("RIGHT", np, "RIGHT", -6, 0)
-						itemBtn:Show()
-					else
-						itemBtn.itemLink = nil
-						itemBtn:Hide()
-					end
-				else
-					itemBtn.itemLink = nil
-					itemBtn:Hide()
-				end
-				-- Waypoint button
-				local wpBtn = np.wpBtn
-				if step.waypoints then
-					wpBtn.waypoints = step.waypoints
-					wpBtn.waypoint  = nil
-					wpBtn.lbl:SetText("Set All Waypoints")
-					local wpAnchor = itemBtn:IsShown() and itemBtn or (lastSubstepFrame or np.noteLbl)
-					wpBtn:SetPoint("TOPLEFT", wpAnchor, "BOTTOMLEFT", 0, -4)
-					wpBtn:SetPoint("RIGHT", np, "RIGHT", -6, 0)
-					wpBtn:Show()
-				elseif step.waypoint then
-					wpBtn.waypoint  = step.waypoint
-					wpBtn.waypoints = nil
-					wpBtn.lbl:SetText("Set Waypoint")
-					local wpAnchor = itemBtn:IsShown() and itemBtn or (lastSubstepFrame or np.noteLbl)
-					wpBtn:SetPoint("TOPLEFT", wpAnchor, "BOTTOMLEFT", 0, -4)
-					wpBtn:SetPoint("RIGHT", np, "RIGHT", -6, 0)
-					wpBtn:Show()
-				elseif step.factionWaypoint then
-					local fkey      = (UnitFactionGroup and UnitFactionGroup("player") == "Alliance") and "alliance" or "horde"
-					wpBtn.waypoint  = step.factionWaypoint[fkey]
-					wpBtn.waypoints = nil
-					wpBtn.lbl:SetText("Set Waypoint")
-					local wpAnchor = itemBtn:IsShown() and itemBtn or (lastSubstepFrame or np.noteLbl)
-					wpBtn:SetPoint("TOPLEFT", wpAnchor, "BOTTOMLEFT", 0, -4)
-					wpBtn:SetPoint("RIGHT", np, "RIGHT", -6, 0)
-					wpBtn:Show()
-				else
-					wpBtn.waypoint  = nil
-					wpBtn.waypoints = nil
-					wpBtn:Hide()
-				end
-				-- Show expand arrow only when there is something to reveal in the note panel
-				local hasNote = (step.note and step.note ~= "")
-						or (resolvedSubs and #resolvedSubs > 0)
-						or itemBtn:IsShown()
-						or wpBtn:IsShown()
-				row.hasNote = hasNote
-				row.arrowLbl:SetShown(hasNote)
-				-- Always reset collapse state when loading a new entry
-				row.isOpen = false
-				row.arrowLbl:SetText("+")
-				np:Hide()
-				row:Hide() -- hidden until the steps header is expanded
-			end
-		end
-		-- Retire rows left over from a previously displayed entry that had more steps.
-		for i = numSteps + 1, #stepRows do
-			local row = stepRows[i]
-			row.hasNote = false
-			row.isOpen  = false
-			row.notePanel:Hide()
-			row:Hide()
-		end
-		if numSteps > 0 then
-			-- Collapse by default when the secret is already collected
-			stepsCollapsed = (SC:GetEntryStatus(entry) == "collected")
-			local prefix = stepsCollapsed and "+ " or "- "
-			stepsHeader.lbl:SetText(prefix .. "Progress  " .. doneCount .. " / " .. numSteps .. "  steps")
-			stepsHeader:Show()
-		else
-			stepsHeader:Hide()
-		end
+		local numSteps = Guides_ShowSteps(entry)
+		-- Sizing the scroll region stays with the caller: it needs the step count
+		-- from Guides_ShowSteps and the source/description flags resolved earlier,
+		-- and neither of those alone owns the answer.
 		Guides_UpdateDetailScroll(numSteps, sourceText ~= "", descText ~= "")
-		-- ---- End Progress Steps ----
 
-		-- Hide model strip for kinds that never have a 3-D model
-		if entry.kind == "achievement" or entry.kind == "quest"
-				or entry.kind == "toy" or entry.kind == "mystery" then
-			detailModel:Hide()
-			detailModelScene:Hide()
-			detailModelZoomed:Hide()
-			SetModelTabEnabled(false)
-			return
-		end
-
-		-- Reset both viewers; each block below shows exactly one
-		detailModelScene:ClearScene()
-		detailModelScene:Hide()
-		detailModelZoomed.cameraID = nil
-		detailModelZoomed:Hide()
-		detailModel:ClearModel()
-		detailModel:SetUnit("none")
-		detailModel:RefreshCamera()
-		detailModel.cameraID    = nil
-		detailModel.modelFacing = 0
-		detailModel.camScale    = 1
-		detailModel:SetFacing(0)
-		detailModel:SetCamDistanceScale(1)
-		detailModel:Hide()
-		local modelSet = false
-
-		if entry.kind == "mount" then
-			local mountID = entry.mountID
-			if not mountID and entry.itemID and C_MountJournal and C_MountJournal.GetMountFromItem then
-				mountID = C_MountJournal.GetMountFromItem(entry.itemID)
-			end
-			if mountID and C_MountJournal and C_MountJournal.GetMountInfoExtraByID then
-				local creatureDisplayID = C_MountJournal.GetMountInfoExtraByID(mountID)
-				if creatureDisplayID and creatureDisplayID > 0 then
-					detailModel:SetDisplayInfo(creatureDisplayID)
-					detailModel:SetCamera(1)
-					detailModel:SetFacing(math_rad(30))
-					if entry.camScale then
-						detailModel:SetCamDistanceScale(entry.camScale)
-					end
-					modelSet = true
-				end
-			end
-		elseif entry.kind == "pet" and C_PetJournal then
-			local creatureDisplayID
-			if entry.itemID and C_PetJournal.GetPetInfoByItemID then
-				local _, _, _, _, _, _, _, _, _, _, _, displayID = C_PetJournal.GetPetInfoByItemID(entry.itemID)
-				creatureDisplayID = displayID
-			end
-			if (not creatureDisplayID or creatureDisplayID == 0) and entry.speciesID and C_PetJournal.GetPetInfoBySpeciesID then
-				local _, _, _, _, _, _, _, _, _, _, _, displayID = C_PetJournal.GetPetInfoBySpeciesID(entry.speciesID)
-				creatureDisplayID = displayID
-			end
-			if creatureDisplayID and creatureDisplayID > 0 then
-				detailModel:SetDisplayInfo(creatureDisplayID)
-				detailModel.modelFacing = math_rad(20)
-				detailModel.camScale    = 1.25
-				detailModel:SetFacing(detailModel.modelFacing)
-				detailModel:SetCamDistanceScale(detailModel.camScale)
-				modelSet = true
-			end
-		elseif entry.kind == "transmog" and entry.itemID then
-			-- Determine inventory type so weapons can be shown without a player body
-			local invType = select(4, C_Item.GetItemInfoInstant(entry.itemID))
-			local appearanceID = C_TransmogCollection and C_TransmogCollection.GetItemInfo(entry.itemID)
-			local cameraID = appearanceID and C_TransmogCollection.GetAppearanceCameraID(appearanceID)
-			if cameraID == 0 then cameraID = nil end -- 0 is truthy in Lua but means no camera
-			local heldSlots = {
-				INVTYPE_WEAPON = true,
-				INVTYPE_2HWEAPON = true,
-				INVTYPE_WEAPONMAINHAND = true,
-				INVTYPE_WEAPONOFFHAND = true,
-				INVTYPE_RANGED = true,
-				INVTYPE_RANGEDRIGHT = true,
-				INVTYPE_HOLDABLE = true,
-				INVTYPE_SHIELD = true,
-			}
-			if heldSlots[invType] then
-				-- Weapon/held: display the item floating alone, no player body
-				detailModel.cameraID = cameraID
-				if cameraID and Model_ApplyUICamera then
-					Model_ApplyUICamera(detailModel, cameraID)
-					detailModel:SetAnimation(0, 0)
-				end
-				if appearanceID then
-					detailModel:SetItemAppearance(appearanceID)
-				else
-					detailModel:SetItem(entry.itemID)
-				end
-				modelSet = true
-			else
-				-- Worn armor: mirrors AppearanceTooltip's Zoomed model flow exactly.
-				-- SetKeepModelOnHide keeps the player loaded so TryOn works synchronously.
-				detailModelZoomed.cameraID = cameraID
-				detailModelZoomed:SetUnit("player")
-				detailModelZoomed:Dress()
-				if cameraID and Model_ApplyUICamera then
-					Model_ApplyUICamera(detailModelZoomed, cameraID)
-					detailModelZoomed:SetAnimation(0, 0)
-				end
-				detailModelZoomed:TryOn("item:" .. entry.itemID)
-				detailModelZoomed:Show()
-				-- modelSet stays false; detailModel hidden, detailModelZoomed shown above
-			end
-		elseif entry.kind == "housing" and entry.itemID then
-			if C_HousingCatalog and C_HousingCatalog.GetCatalogEntryInfoByItem then
-				local info = C_HousingCatalog.GetCatalogEntryInfoByItem(entry.itemID, false)
-				if info and info.asset and info.asset > 0 then
-					detailModelScene:ClearScene()
-					detailModelScene:SetViewInsets(0, 0, 0, 0)
-					detailModelScene:TransitionToModelSceneID(HOUSING_SCENE_ID, CAMERA_TRANSITION_TYPE_IMMEDIATE,
-						CAMERA_MODIFICATION_TYPE_DISCARD, true)
-					local actor = detailModelScene:GetActorByTag("decor") or detailModelScene:CreateActor("decor")
-					if actor then
-						actor:SetPreferModelCollisionBounds(true)
-						actor:SetModelByFileID(info.asset)
-					end
-					detailModelScene:Show()
-				end
-			end
-		end
-
-		detailModel:SetShown(modelSet)
-		-- detailModelScene and detailModelZoomed visibility set explicitly in blocks above
-		SetModelTabEnabled(modelSet or detailModelZoomed:IsShown() or detailModelScene:IsShown())
+		Guides_ShowModel(entry)
 	end
 
 	-- ==============================================
