@@ -223,11 +223,9 @@ if EllesmereUI and EllesmereUI.RegisterSkin then
 		if theme then theme.Available = true end
 
 		if SecretChecklistDB then
-			-- Existing installs: a theme already saved counts as the user's own
-			-- choice, so upgrading never yanks anyone off the theme they picked.
-			if SecretChecklistDB.themeUserSet == nil then
-				SecretChecklistDB.themeUserSet = (SecretChecklistDB.theme ~= nil)
-			end
+			-- themeUserSet is seeded by SC:InitDB at ADDON_LOADED. This callback
+			-- fires at EllesmereUI's PLAYER_LOGIN, strictly later, so the value is
+			-- already correct and no longer needs seeding here as well.
 			if not SecretChecklistDB.themeUserSet then
 				SC:ApplyTheme(THEME_KEY)
 				return

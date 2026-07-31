@@ -67,6 +67,16 @@ function SC:InitDB()
 		for _, key in ipairs(RETIRED_KEYS) do
 			db[key] = nil
 		end
+		-- Installs predating themeUserSet: a theme already saved counts as the
+		-- user's own choice, so upgrading never moves anyone off the theme they
+		-- picked. Seeding it here -- before any auto-select runs -- is what stops
+		-- an auto-pick being mistaken for a deliberate one. This used to be
+		-- duplicated in the PLAYER_LOGIN handler and in the EllesmereUI skin
+		-- callback because neither knew which would run first; with InitDB
+		-- running at ADDON_LOADED, both are strictly later and can just read it.
+		if db.themeUserSet == nil then
+			db.themeUserSet = (db.theme ~= nil)
+		end
 		if type(db.tabFilters) == "table" then
 			for _, filter in pairs(db.tabFilters) do
 				if type(filter) == "table" and type(filter.kinds) == "table" then

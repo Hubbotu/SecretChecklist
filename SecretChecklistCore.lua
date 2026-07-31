@@ -960,10 +960,23 @@ function SC:OpenOptionsPanel()
 	return false
 end
 
--- Initialize when the frame is first loaded
+-- Build the UI at ADDON_LOADED rather than at file scope.
+--
+-- Initialize() restores saved filters from SecretChecklistDB, and ADDON_LOADED
+-- is the first point at which SavedVariables are guaranteed to be both loaded
+-- and addressable. Running it during file execution left that read racing
+-- against DB population -- the same hazard that had already forced the minimap
+-- restore below onto PLAYER_LOGIN.
 if frame then
-	Initialize()
-	CreateOptionsPanel()
+	local initFrame = CreateFrame("Frame")
+	initFrame:RegisterEvent("ADDON_LOADED")
+	initFrame:SetScript("OnEvent", function(self, _, addonName)
+		if addonName ~= "SecretChecklist" then return end
+		self:UnregisterEvent("ADDON_LOADED")
+		SC:InitDB()
+		Initialize()
+		CreateOptionsPanel()
+	end)
 end
 
 -- Trigger housing storage load proactively. Declared here (file-level local)
@@ -1087,14 +1100,9 @@ do
 		if SecretChecklistDB.hideAddonCompartment ~= true then
 			RegisterAddonCompartment()
 		end
-		-- Apply saved theme (deferred to PLAYER_LOGIN so SavedVariables are committed)
-		-- Installs from before themeUserSet existed: an already-saved theme counts
-		-- as a deliberate choice, so upgrading never moves anyone off it.  Seeded
-		-- here (and again in the EllesmereUI skin callback, whichever runs first)
-		-- BEFORE the auto-picks below, so an auto-pick is not mistaken for one.
-		if SecretChecklistDB.themeUserSet == nil then
-			SecretChecklistDB.themeUserSet = (SecretChecklistDB.theme ~= nil)
-		end
+		-- themeUserSet is seeded by SC:InitDB at ADDON_LOADED, which is strictly
+		-- earlier than this, so it is already correct here.
+		--
 		-- Auto-select ElvUI theme on first load if ElvUI is present and no theme has been saved yet.
 		-- EllesmereUI, when present and able to skin us, takes precedence and
 		-- claims this from its own skin callback (it can only paint once that fires).
