@@ -63,6 +63,10 @@ L["TOOLTIP_NOT_COMPLETED"] = "Not completed"
 L["SETTINGS_TITLE"] = "SecretChecklist"
 L["SETTINGS_MINIMAP_BUTTON"] = "Show Minimap Button"
 L["SETTINGS_MINIMAP_BUTTON_DESC"] = "Show or hide the SecretChecklist minimap button."
+L["SETTINGS_ADDON_COMPARTMENT"] = "Show Addon Compartment Button"
+L["SETTINGS_ADDON_COMPARTMENT_DESC"] = "Show or hide the SecretChecklist button in the minimap addon compartment."
+L["SETTINGS_ALERTS"] = "Show Collection Alerts"
+L["SETTINGS_ALERTS_DESC"] = "Show a toast notification when a tracked secret is newly collected."
 
 -- Slash Commands
 L["CMD_OPTIONS"] = "Opening settings..."
@@ -72,6 +76,9 @@ L["CMD_MINIMAP_HIDE"] = "Minimap button hidden."
 -- Status Messages
 L["DATA_NOT_READY"] = "Collection data not ready yet. Try opening Collections once."
 L["UNKNOWN"] = "(unknown)"
+-- Tabs
+L["TAB_OVERVIEW"]         = "Overview"
+L["TAB_GUIDES"]           = "Guides"
 -- About tab
 L["TAB_ABOUT"]            = "About"
 L["ABOUT_BY"] = "By Calaglyn"
@@ -84,10 +91,15 @@ L["SETTINGS_THEME"]      = "Theme"
 L["SETTINGS_THEME_DESC"] = "Select a visual theme for SecretChecklist."
 -- Minimap button
 L["TOOLTIP_RIGHT_CLICK_OPTIONS"] = "Right-click to open options"
--- Make the locale table available globally
-local LOCALE = GetLocale()
-if LOCALE == "enUS" or LOCALE == "enGB" then
-	_G.SecretChecklistLocale = L
-end
+-- Publish unconditionally: enUS is the base layer that every other locale file
+-- overlays (each does `local L = _G.SecretChecklistLocale or {}` and then adds
+-- its own strings). Previously this only published on an English client, so a
+-- deDE or ruRU client started from an empty table and every key that locale had
+-- not translated fell through to a hardcoded English literal at the call site.
+--
+-- No __index metatable here on purpose: call sites are written as
+-- `L["KEY"] or "English"`, so a key must still resolve to nil when absent for
+-- that fallback to fire.
+_G.SecretChecklistLocale = L
 
 return L
