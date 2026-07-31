@@ -20,7 +20,23 @@ if not SC then return end
 
 SecretChecklist_AlertFrameMixin = {}
 
+-- Every alert frame the pool has ever spawned, registered from OnLoad.
+--
+-- RefreshAlertTheme used to look these up as globals named
+-- "SecretChecklist_AlertFrame_Template1", "…2" and so on. Blizzard's
+-- AddQueuedAlertFrameSubSystem builds its pool with CreateFramePool, which
+-- creates frames with a nil name, so those globals never existed: the loop
+-- found nothing on its first iteration and returned, every time. Theme changes
+-- therefore never reached a toast that had already been created.
+--
+-- OnLoad is the one place guaranteed to run for every pooled instance,
+-- regardless of how Blizzard names or pools them. Bounded by the sub-system's
+-- own maxAlerts, so this holds nothing alive that the pool did not already.
+local alertFrames = {}
+
 function SecretChecklist_AlertFrameMixin:OnLoad()
+	alertFrames[#alertFrames + 1] = self
+
 	-- Dark background panel – no custom texture file needed; uses
 	-- SetColorTexture so this works with any WoW client version.
 	local bg = self:CreateTexture(nil, "BACKGROUND", nil, -8)
@@ -176,22 +192,12 @@ function SC:ApplyAlertTheme(alertFrame)
 	end
 end
 
--- Re-skins all currently pooled/visible alert frame instances.
--- Called by Themes.lua OnApply / OnReset via SC.onAlertThemeChanged.
+-- Re-skins every alert frame the pool has spawned, so a theme change reaches
+-- toasts that already exist. Called by the theme OnApply / OnReset hooks.
+-- Safe before any toast has been created: the list is simply empty.
 function SC:RefreshAlertTheme()
-	-- No alertSubSystem guard here: the local is declared further down this
-	-- file, so the name resolved to a nil *global* and this function bailed on
-	-- every call.  The loop below is safe with no frames spawned yet -- it just
-	-- finds nothing and exits.
-	--
-	-- The sub-system keeps an internal pool; iterate the global frame pool via
-	-- the named template pattern ContainedAlertFrame uses.
-	local i = 1
-	while true do
-		local f = _G["SecretChecklist_AlertFrame_Template" .. i]
-		if not f then break end
-		self:ApplyAlertTheme(f)
-		i = i + 1
+	for i = 1, #alertFrames do
+		self:ApplyAlertTheme(alertFrames[i])
 	end
 end
 
