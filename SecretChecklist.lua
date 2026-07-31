@@ -423,10 +423,21 @@ function SC:CheckEntry(entry)
 				return hasTransmog == true, "transmog"
 			end
 		end
-		-- Fallback: use C_TransmogCollection.GetItemInfo
-		local _, _, _, _, isCollected = C_TransmogCollection.GetItemInfo(entry.itemID)
-		if isCollected ~= nil then
-			return isCollected == true, "transmog"
+		-- Fallback: resolve the appearance source and ask whether it is collected.
+		--
+		-- This used to unpack a fifth return from C_TransmogCollection.GetItemInfo
+		-- as `isCollected`. That function returns exactly two values --
+		-- appearanceID and sourceID -- so the fifth was always nil and this branch
+		-- could only ever fall through to the "not loaded" message below. It was a
+		-- fallback that never fell back.
+		if C_TransmogCollection.GetItemInfo and C_TransmogCollection.GetSourceInfo then
+			local _, sourceID = C_TransmogCollection.GetItemInfo(entry.itemID)
+			if sourceID then
+				local info = C_TransmogCollection.GetSourceInfo(sourceID)
+				if info and info.isCollected ~= nil then
+					return info.isCollected == true, "transmog"
+				end
+			end
 		end
 		return nil, "Appearance data has not finished loading yet."
 	end
