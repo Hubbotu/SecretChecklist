@@ -395,7 +395,11 @@ function SC:BuildOverviewPanel(frame, L)
 			local isNotManual  = entry.kind ~= "manual"
 			local isMindSeeker = entry.mindSeeker and not entry.linkedSecret
 			if isNotManual or isMindSeeker then
-				local collected = SC:CheckEntry(entry) == true
+				-- Goes through GetEntryStatus rather than CheckEntry directly so the
+				-- counters read the same cached answer the list and buttons use.
+				-- Equivalent: CheckEntry returning true is exactly "collected", and a
+				-- manual entry resolves to "manual" where it previously returned nil.
+				local collected = SC:GetEntryStatus(entry) == "collected"
 				if isNotManual then
 					totalAll = totalAll + 1
 					if collected then collectedAll = collectedAll + 1 end

@@ -988,6 +988,11 @@ local TriggerHousingStorageLoad
 do
 	local _refreshPending = false
 	local function ScheduleCollectionRefresh()
+		-- Drop the status cache before the debounce guard, not after it: a second
+		-- event arriving inside the 100ms window still invalidates state even
+		-- though it will not schedule another redraw. Every collection, bag and
+		-- housing handler funnels through here, so this is the single choke point.
+		SC:InvalidateStatusCache()
 		if _refreshPending then return end
 		_refreshPending = true
 		C_Timer.After(0.1, function()

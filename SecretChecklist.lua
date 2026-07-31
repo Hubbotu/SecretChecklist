@@ -266,22 +266,59 @@ end
 function SC:RefreshCaches()
 end
 
+-- Status cache, keyed by entry table.
+--
+-- A single Overview page turn asks for entry status several times over: once
+-- per entry to apply the collected/missing filter, again to build the sort key,
+-- again per visible button to pick its border and colour, and again for the
+-- progress counters -- and each answer costs 1-3 C API calls. The alert scan
+-- walks every entry as well. Nothing about that changes between the calls.
+--
+-- "unknown" is deliberately never cached: it means the journal or catalog has
+-- not finished loading, so re-asking is exactly the right behaviour. Only
+-- settled answers are stored.
+--
+-- Invalidated wholesale by SC:InvalidateStatusCache, which the collection, bag
+-- and housing event handlers call. Keys are entry tables from SC.entries, which
+-- live for the session, so the cache is bounded and holds nothing else alive.
+local statusCache, detailCache = {}, {}
+
+function SC:InvalidateStatusCache()
+	wipe(statusCache)
+	wipe(detailCache)
+end
+
 function SC:GetEntryStatus(entry)
 	-- Returns: "collected" | "missing" | "unknown" | "manual", plus optional detail
 	if type(entry) ~= "table" then
 		return "unknown", "Invalid entry"
 	end
+
+	local cached = statusCache[entry]
+	if cached then
+		return cached, detailCache[entry]
+	end
+
+	local status, detail
 	if entry.kind == "manual" then
-		return "manual", entry.note
+		status, detail = "manual", entry.note
+	else
+		local have, d = self:CheckEntry(entry)
+		detail = d
+		if have == true then
+			status = "collected"
+		elseif have == false then
+			status = "missing"
+		else
+			status = "unknown"
+		end
 	end
-	local have, detail = self:CheckEntry(entry)
-	if have == true then
-		return "collected", detail
+
+	if status ~= "unknown" then
+		statusCache[entry] = status
+		detailCache[entry] = detail
 	end
-	if have == false then
-		return "missing", detail
-	end
-	return "unknown", detail
+	return status, detail
 end
 
 function SC:CheckEntry(entry)
