@@ -12,12 +12,16 @@ _G.SecretChecklist = SC
 -- SAVED VARIABLES
 -- ==============================================
 
--- Bumped to 2 because the first cut of this migration never ran: dbVersion was
--- listed in DB_DEFAULTS, so the defaults loop stamped it to the current version
--- *before* the migration gate read it, and every existing profile looked
--- already-migrated. Profiles carrying that bogus stamp are cleaned by the
--- version-2 gate below.
-local DB_VERSION = 2
+-- History:
+--   1 -- never ran. dbVersion was listed in DB_DEFAULTS, so the defaults loop
+--        stamped it to the current version *before* the migration gate read it,
+--        and every existing profile looked already-migrated.
+--   2 -- the retired-key prune, re-gated so profiles carrying that bogus
+--        version-1 stamp are cleaned too.
+--   3 -- prunes aboutUnlocked, whose only writer has now been removed. A key
+--        added to RETIRED_KEYS is only pruned by a gate a profile has not yet
+--        passed, so extending the list means bumping the version.
+local DB_VERSION = 3
 
 -- Every key the addon persists, with its default.
 --
@@ -47,10 +51,11 @@ local VALID_KINDS = {
 -- Top-level keys written by features that have since been removed. They persist
 -- in every existing user's SavedVariables forever unless something deletes them.
 local RETIRED_KEYS = {
-	"filterKinds",  -- superseded by tabFilters.<tab>.kinds
-	"filterStatus", -- superseded by tabFilters.<tab>.showCollected / showMissing
-	"lastError",    -- removed error-reporting feature
-	"lastReport",   -- removed error-reporting feature
+	"filterKinds",   -- superseded by tabFilters.<tab>.kinds
+	"filterStatus",  -- superseded by tabFilters.<tab>.showCollected / showMissing
+	"lastError",     -- removed error-reporting feature
+	"lastReport",    -- removed error-reporting feature
+	"aboutUnlocked", -- written by UnlockAboutTab, which was never called and is now removed
 }
 
 -- Idempotent: safe to call more than once.
@@ -78,7 +83,9 @@ function SC:InitDB()
 	-- Migrations are ordered and gated on the version the profile arrived with.
 	-- Each step is written to be idempotent, so a profile that took the bogus
 	-- version-1 stamp is corrected here rather than needing a separate step.
-	if fromVersion < 2 then
+	-- Gated on 3, not 2: the prune below is idempotent and the list has grown, so
+	-- a profile already stamped 2 still needs one more pass over it.
+	if fromVersion < 3 then
 		for _, key in ipairs(RETIRED_KEYS) do
 			db[key] = nil
 		end

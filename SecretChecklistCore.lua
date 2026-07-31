@@ -319,30 +319,6 @@ function SC:OpenGuideForEntry(entry)
 	SwitchTab("guides")
 end
 
--- Permanently unhides the About tab and persists the unlock across sessions.
--- Safe to call multiple times; creates the button only once.
-function SC:UnlockAboutTab()
-	-- Already present? Nothing to do.
-	for _, btn in ipairs(SC.tabButtons_list) do
-		if btn.tabID == "about" then return end
-	end
-	-- Persist
-	if SecretChecklistDB then
-		SecretChecklistDB.aboutUnlocked = true
-	end
-	-- Create and anchor after the last existing tab
-	local btn = CreateTabButton("about", L["TAB_ABOUT"] or "About")
-	if SC.lastTabButton then
-		btn:SetPoint("TOPLEFT", SC.lastTabButton, "TOPRIGHT", 3, 0)
-	else
-		btn:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 11, 2)
-	end
-	tinsert(SC.tabButtons_list, btn)
-	SC.lastTabButton = btn
-	-- Re-skin so the new button inherits the active theme
-	SC:ApplyTheme(SC.currentThemeName or "Default")
-end
-
 -- ==============================================
 -- SHOW/HIDE HANDLERS
 -- ==============================================
@@ -795,14 +771,24 @@ function SC:SetAddonCompartmentHidden(hidden)
 	if not AddonCompartmentFrame then return end
 
 	if hidden then
-		-- Find and remove our entry by reference (Blizzard has no UnregisterAddon API).
+		-- Blizzard has no UnregisterAddon API, so removal means reaching into
+		-- AddonCompartmentFrame.registeredAddons -- a private field with no
+		-- compatibility guarantee. Guard its shape rather than assume it: if
+		-- Blizzard renames or restructures it, the button simply stays visible
+		-- instead of throwing on a settings change.
 		if compartmentData then
 			local list = AddonCompartmentFrame.registeredAddons
-			for i = 1, #list do
-				if list[i] == compartmentData then
-					table.remove(list, i)
+			if type(list) == "table" then
+				-- Iterate backwards: removing while indexing forwards skips the
+				-- following element, which would matter if a duplicate registration
+				-- ever occurred.
+				for i = #list, 1, -1 do
+					if list[i] == compartmentData then
+						table.remove(list, i)
+					end
+				end
+				if AddonCompartmentFrame.UpdateDisplay then
 					AddonCompartmentFrame:UpdateDisplay()
-					break
 				end
 			end
 			compartmentData = nil
