@@ -30,6 +30,41 @@ function SC:RegisterTheme(key, theme)
 	SC.themes[key] = theme
 end
 
+-- The gold that marks a collected item. Shared so the themes cannot drift apart
+-- on what "collected" looks like.
+SC.COLLECTED_GOLD = { 0.85, 0.65, 0.13 }
+
+-- ==============================
+-- Theme primitives
+-- ==============================
+--
+-- A theme may supply drawing routines for widgets whose appearance is genuinely
+-- theme-specific:
+--
+--   StyleIconSlot(button, isCollected, isMissing)
+--       Paints an Overview icon button. The button carries iconTexture,
+--       iconTextureUncollected, iconFrame, the three slotFrame* atlas textures,
+--       and button:GetIconBorder() for a 1px border frame the theme owns.
+--
+--   StyleTab(button, isActive)
+--       Paints a bottom tab. The button carries Left/Right/Middle and the
+--       *Active variants, plus Text.
+--
+-- Panels used to branch on SC.currentThemeName themselves, in three different
+-- files, so adding a theme meant editing the panels and every panel had to know
+-- the name of every theme. Now the panel asks for a primitive and draws with
+-- whatever it gets.
+--
+-- Default implements both, so a primitive is always available and callers need
+-- no fallback path.
+function SC:ThemePrimitive(name)
+	local theme = SC.themes[SC.currentThemeName or "Default"]
+	local fn    = theme and theme[name]
+	if fn then return fn end
+	local default = SC.themes["Default"]
+	return default and default[name]
+end
+
 -- Returns {r,g,b,a} for a named colour; falls back to Default then white.
 -- A colour entry may be a function returning {r,g,b,a} instead of a literal
 -- table.  Themes that derive their palette from another addon (EllesmereUI's
@@ -114,6 +149,29 @@ SC:RegisterTheme("Default", {
 		rowHov  = {1,    1,    1,    0.06},
 		divider = {0.30, 0.25, 0.20, 0.80},
 	},
+
+	-- Blizzard's round collections slot art. Also the fallback the other themes
+	-- delegate to before their own decorations exist.
+	StyleIconSlot = function(button, isCollected, isMissing)
+		if button.iconFrame and button.iconFrame.backdrop then
+			button.iconFrame.backdrop:Hide()
+		end
+		if button.iconBorder then button.iconBorder:Hide() end
+		button.slotFrameCollected:SetShown(isCollected)
+		button.slotFrameUncollected:SetShown(not isCollected)
+		button.slotFrameUncollectedInnerGlow:SetShown(isMissing)
+	end,
+
+	StyleTab = function(button, isActive)
+		if isActive then
+			button.LeftActive:Show(); button.RightActive:Show(); button.MiddleActive:Show()
+			button.Left:Hide(); button.Right:Hide(); button.Middle:Hide()
+		else
+			button.LeftActive:Hide(); button.RightActive:Hide(); button.MiddleActive:Hide()
+			button.Left:Show(); button.Right:Show(); button.Middle:Show()
+		end
+		button.Text:SetFontObject(isActive and "GameFontHighlightSmall" or "GameFontNormalSmall")
+	end,
 })
 
 -- =================================================================
@@ -122,6 +180,18 @@ SC:RegisterTheme("Default", {
 -- Only available when ElvUI is loaded.
 -- Inspired by BetterBags' ElvUI theme (MIT License, Antonio Lobato).
 -- =================================================================
+-- ElvUI's border colour, refreshed in OnApply. Read per icon during a page
+-- redraw, so it is cached rather than unpacked from E.media each time.
+local elvBorder = { 0.3, 0.3, 0.3 }
+
+local function RefreshElvBorderColor()
+	if not ElvUI then return end
+	local E = unpack(ElvUI)
+	if E and E.media and E.media.bordercolor then
+		elvBorder[1], elvBorder[2], elvBorder[3] = unpack(E.media.bordercolor)
+	end
+end
+
 SC:RegisterTheme("ElvUI", {
 	Name        = "ElvUI",
 	Description = "A flat dark theme matching ElvUI's aesthetic. Requires ElvUI.",
@@ -136,12 +206,51 @@ SC:RegisterTheme("ElvUI", {
 		rowHov  = {1,    1,    1,    0.08},
 		divider = {0.20, 0.20, 0.20, 1.00},
 	},
+
+	-- Flat: no round atlas art, an ElvUI backdrop border instead, tinted gold
+	-- when collected.
+	StyleIconSlot = function(button, isCollected, isMissing)
+		if button.iconBorder then button.iconBorder:Hide() end
+		button.slotFrameCollected:Hide()
+		button.slotFrameUncollected:Hide()
+		button.slotFrameUncollectedInnerGlow:Hide()
+
+		local iconFrame = button.iconFrame
+		if not iconFrame then return end
+		if not iconFrame.backdrop and iconFrame.CreateBackdrop then
+			iconFrame:CreateBackdrop()
+		end
+		if not iconFrame.backdrop then
+			-- ElvUI has not given us CreateBackdrop yet; fall back so the button
+			-- is never left with no border at all.
+			return SC.themes.Default.StyleIconSlot(button, isCollected, isMissing)
+		end
+		iconFrame.backdrop:Show()
+		if isCollected then
+			local gold = SC.COLLECTED_GOLD
+			iconFrame.backdrop:SetBackdropBorderColor(gold[1], gold[2], gold[3], 1)
+		else
+			iconFrame.backdrop:SetBackdropBorderColor(elvBorder[1], elvBorder[2], elvBorder[3], 1)
+		end
+	end,
+
+	StyleTab = function(button, isActive)
+		-- elvBg is built by OnApply; before that runs there is nothing to tint.
+		if not (button.elvBg and button.elvBg:IsShown() and button.elvBg.SetBackdropColor) then
+			return SC.themes.Default.StyleTab(button, isActive)
+		end
+		local shade = isActive and 0.15 or 0.06
+		button.elvBg:SetBackdropColor(shade, shade, shade, 1)
+		button.Text:SetFontObject(isActive and "GameFontHighlightSmall" or "GameFontNormalSmall")
+	end,
+
 	OnApply = function()
 		if not ElvUI then return end
 		local E = unpack(ElvUI)  ---@type ElvUI
 		local S = E:GetModule("Skins")
 		local frame = _G.SecretChecklistFrame
 		if not frame or not S then return end
+		RefreshElvBorderColor()
 
 		-- Non-destructively hide PortraitFrameTemplate chrome (NineSlice border,
 		-- background and title streaks).  We hide rather than strip so OnReset can

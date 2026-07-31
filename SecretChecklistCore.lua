@@ -182,38 +182,12 @@ function SC:GetFilteredEntries() return GetFilteredEntries() end
 -- ==============================================
 
 local function SetTabActive(button, isActive)
-	-- EllesmereUI's Tab primitive owns the whole tab visual (flat plate, own
-	-- label, accent underline) and reads selection from button.isSelected --
-	-- our frame is not a PanelTemplates-managed tab system, so that flag is
-	-- what its TabIsSelected check falls through to.  Set it and let the
-	-- primitive repaint; it is idempotent, so re-calling is near-free.
+	-- EllesmereUI's Tab primitive reads selection from button.isSelected -- our
+	-- frame is not a PanelTemplates-managed tab system, so that flag is what its
+	-- TabIsSelected check falls through to. Set it for every theme, then let the
+	-- active theme paint.
 	button.isSelected = isActive
-	if button._euiSkinned and SC._euiSkin and SC.currentThemeName == "EllesmereUI" then
-		SC._euiSkin.Tab(button)
-		return
-	end
-
-	-- When a flat theme (e.g. ElvUI) has placed its own backdrop (elvBg) over
-	-- the tab, skip the atlas show/hide so our theme hide isn't overridden.
-	if button.elvBg and button.elvBg:IsShown() then
-		-- Give active/inactive visual feedback through the backdrop
-		if button.elvBg.SetBackdropColor then
-			if isActive then
-				button.elvBg:SetBackdropColor(0.15, 0.15, 0.15, 1)
-			else
-				button.elvBg:SetBackdropColor(0.06, 0.06, 0.06, 1)
-			end
-		end
-	else
-		if isActive then
-			button.LeftActive:Show(); button.RightActive:Show(); button.MiddleActive:Show()
-			button.Left:Hide(); button.Right:Hide(); button.Middle:Hide()
-		else
-			button.LeftActive:Hide(); button.RightActive:Hide(); button.MiddleActive:Hide()
-			button.Left:Show(); button.Right:Show(); button.Middle:Show()
-		end
-	end
-	button.Text:SetFontObject(isActive and "GameFontHighlightSmall" or "GameFontNormalSmall")
+	SC:ThemePrimitive("StyleTab")(button, isActive)
 end
 
 local SwitchTab -- forward declaration

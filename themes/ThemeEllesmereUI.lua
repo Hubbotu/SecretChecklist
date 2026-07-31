@@ -207,6 +207,52 @@ SC:RegisterTheme(THEME_KEY, {
 		rowHov  = function() return { 1, 1, 1, 0.08 } end,
 		divider = function() return AccentColor(0.55) end,
 	},
+	-- Squared icons, matching how EUI treats icons elsewhere.
+	--
+	-- SquareIcon is used for the texcoord crop only, without the parent frame:
+	-- passing it draws EUI's own fixed black border, which takes no colour and
+	-- would make collected and uncollected icons identical. The border is drawn
+	-- here instead so the gold collected cue survives, as it does in the other
+	-- two themes. EUI's guide says the colour getters exist for elements it has
+	-- no primitive for; a tintable icon border is one of those.
+	StyleIconSlot = function(button, isCollected, isMissing)
+		local S = SC._euiSkin
+		if not S then
+			return SC.themes.Default.StyleIconSlot(button, isCollected, isMissing)
+		end
+
+		button.slotFrameCollected:Hide()
+		button.slotFrameUncollected:Hide()
+		button.slotFrameUncollectedInnerGlow:Hide()
+		if button.iconFrame and button.iconFrame.backdrop then
+			button.iconFrame.backdrop:Hide()
+		end
+
+		S.SquareIcon(button.iconTexture)
+		S.SquareIcon(button.iconTextureUncollected)
+
+		local border = button:GetIconBorder()
+		if isCollected then
+			local gold = SC.COLLECTED_GOLD
+			border:SetBackdropBorderColor(gold[1], gold[2], gold[3], 1)
+		else
+			-- The same near-black EUI would have drawn, so uncollected icons keep
+			-- the look the theme intends.
+			border:SetBackdropBorderColor(0, 0, 0, 1)
+		end
+		border:Show()
+	end,
+
+	-- EUI's Tab primitive resolves selection from button.isSelected, which the
+	-- caller sets before dispatching here.
+	StyleTab = function(button, isActive)
+		if button._euiSkinned and SC._euiSkin then
+			SC._euiSkin.Tab(button)
+			return
+		end
+		return SC.themes.Default.StyleTab(button, isActive)
+	end,
+
 	OnApply = ApplySkin,
 	OnReset = ResetSkin,
 })

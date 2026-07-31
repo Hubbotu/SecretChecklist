@@ -20,10 +20,6 @@ local math_min, math_max, math_ceil = math.min, math.max, math.ceil
 local select        = select
 local string_format = string.format
 
--- The gold that marks a collected icon. Shared by every flat theme that draws
--- its own icon border, so the cue reads the same whichever one is active.
-local COLLECTED_BORDER_R, COLLECTED_BORDER_G, COLLECTED_BORDER_B = 0.85, 0.65, 0.13
-
 function SC:BuildOverviewPanel(frame, L)
 
 	-- ==============================================
@@ -116,6 +112,21 @@ function SC:BuildOverviewPanel(frame, L)
 		iconFrame:SetSize(48, 48)
 		iconFrame:SetPoint("CENTER", iconTexture, "CENTER", 0, 0)
 		button.iconFrame = iconFrame
+
+		-- A 1px border around the icon whose colour the theme owns. Part of the
+		-- StyleIconSlot contract: a theme with no colourable border primitive of
+		-- its own (EllesmereUI) draws the collected cue with this. Created on
+		-- first request, so themes that never ask never build it.
+		function button:GetIconBorder()
+			if not self.iconBorder then
+				local border = CreateFrame("Frame", nil, self, "BackdropTemplate")
+				border:SetPoint("TOPLEFT", self.iconTexture, "TOPLEFT", -1, 1)
+				border:SetPoint("BOTTOMRIGHT", self.iconTexture, "BOTTOMRIGHT", 1, -1)
+				border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+				self.iconBorder = border
+			end
+			return self.iconBorder
+		end
 
 		-- Name text beside icon
 		local name = button:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -338,25 +349,6 @@ function SC:BuildOverviewPanel(frame, L)
 		return frame.buttonPool[index]
 	end
 
-	-- A 1px border around the icon whose colour we own.
-	--
-	-- Under EllesmereUI, collected and uncollected icons were indistinguishable
-	-- apart from desaturation: S.SquareIcon draws a fixed black border and takes
-	-- no colour, so the gold "collected" cue that the Default and ElvUI themes
-	-- both have was simply lost. EUI's own guide says the colour getters exist
-	-- for elements it has no primitive for, which is exactly this.
-	--
-	-- Created on demand and only ever shown for themes that ask for it.
-	local function GetIconBorder(button)
-		if not button.iconBorder then
-			local border = CreateFrame("Frame", nil, button, "BackdropTemplate")
-			border:SetPoint("TOPLEFT", button.iconTexture, "TOPLEFT", -1, 1)
-			border:SetPoint("BOTTOMRIGHT", button.iconTexture, "BOTTOMRIGHT", 1, -1)
-			border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
-			button.iconBorder = border
-		end
-		return button.iconBorder
-	end
 
 	-- ==============================================
 	-- LAYOUT
@@ -378,20 +370,9 @@ function SC:BuildOverviewPanel(frame, L)
 		local buttonIndex = 1
 		local row, col    = 0, 0
 
-		-- Theme lookups are invariant across the page, so resolve them once here
-		-- rather than per button. The ElvUI border colour in particular used to
-		-- cost an unpack(ElvUI) plus an unpack of its media table for every
-		-- uncollected icon, up to 21 times per redraw.
-		local themeName = SC.currentThemeName
-		local euiSkin   = (themeName == "EllesmereUI") and SC._euiSkin or nil
-		local useFlat   = ElvUI and themeName == "ElvUI"
-		local elvBorderR, elvBorderG, elvBorderB = 0.3, 0.3, 0.3
-		if useFlat then
-			local E = unpack(ElvUI)
-			if E and E.media and E.media.bordercolor then
-				elvBorderR, elvBorderG, elvBorderB = unpack(E.media.bordercolor)
-			end
-		end
+		-- The active theme paints the icon slot. Resolved once for the page: the
+		-- theme cannot change mid-redraw, and the lookup is invariant.
+		local styleIconSlot = SC:ThemePrimitive("StyleIconSlot")
 
 		for i = startIndex, endIndex do
 			local entry  = entries[i]
@@ -410,62 +391,7 @@ function SC:BuildOverviewPanel(frame, L)
 			button.iconTexture:SetShown(isCollected)
 			button.iconTextureUncollected:SetShown(not isCollected)
 
-			if euiSkin then
-				-- EllesmereUI: squared icons in place of the round atlas slot art,
-				-- matching how EUI treats icons elsewhere.
-				button.slotFrameCollected:Hide()
-				button.slotFrameUncollected:Hide()
-				button.slotFrameUncollectedInnerGlow:Hide()
-				if button.iconFrame and button.iconFrame.backdrop then
-					button.iconFrame.backdrop:Hide()
-				end
-				-- SquareIcon is called for the texcoord crop only, without the
-				-- parent frame: passing it draws EUI's fixed black border, which
-				-- takes no colour and would leave collected and uncollected icons
-				-- looking identical. We draw the border ourselves instead so the
-				-- gold collected cue survives, matching the other two themes.
-				euiSkin.SquareIcon(button.iconTexture)
-				euiSkin.SquareIcon(button.iconTextureUncollected)
-				local border = GetIconBorder(button)
-				if isCollected then
-					border:SetBackdropBorderColor(COLLECTED_BORDER_R, COLLECTED_BORDER_G, COLLECTED_BORDER_B, 1)
-				else
-					-- Same near-black EUI would have drawn, so uncollected icons
-					-- keep the look the theme intends.
-					border:SetBackdropBorderColor(0, 0, 0, 1)
-				end
-				border:Show()
-			elseif useFlat then
-				-- Flat theme: hide round atlas borders, use ElvUI backdrop border instead
-				button.slotFrameCollected:Hide()
-				button.slotFrameUncollected:Hide()
-				button.slotFrameUncollectedInnerGlow:Hide()
-				if button.iconBorder then button.iconBorder:Hide() end
-				if button.iconFrame then
-					-- Lazy-create ElvUI backdrop once per button
-					if not button.iconFrame.backdrop and button.iconFrame.CreateBackdrop then
-						button.iconFrame:CreateBackdrop()
-					end
-					if button.iconFrame.backdrop then
-						button.iconFrame.backdrop:Show()
-						if isCollected then
-							button.iconFrame.backdrop:SetBackdropBorderColor(
-								COLLECTED_BORDER_R, COLLECTED_BORDER_G, COLLECTED_BORDER_B, 1)
-						else
-							button.iconFrame.backdrop:SetBackdropBorderColor(elvBorderR, elvBorderG, elvBorderB, 1)
-						end
-					end
-				end
-			else
-				-- Default theme: restore round atlas borders, hide backdrop if present
-				if button.iconFrame and button.iconFrame.backdrop then
-					button.iconFrame.backdrop:Hide()
-				end
-				if button.iconBorder then button.iconBorder:Hide() end
-				button.slotFrameCollected:SetShown(isCollected)
-				button.slotFrameUncollected:SetShown(not isCollected)
-				button.slotFrameUncollectedInnerGlow:SetShown(isMissing)
-			end
+			styleIconSlot(button, isCollected, isMissing)
 
 			if isCollected then
 				button.name:SetTextColor(1, 0.82, 0, 1)
