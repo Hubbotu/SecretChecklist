@@ -713,8 +713,34 @@ end
 
 SLASH_SECRETCHECKLIST1 = "/secrets"
 SLASH_SECRETCHECKLIST2 = "/secretchecklist"
+-- Only "options"/"settings" and the bare command were ever documented; the rest
+-- existed but were undiscoverable, and an unrecognised argument silently opened
+-- the window as though it had been understood.
+local SLASH_HELP = {
+	{ "",         "Open the Secret Checklist window" },
+	{ "options",  "Open the settings panel" },
+	{ "minimap",  "Toggle the minimap button" },
+	{ "alert",    "Fire a test collection toast" },
+	{ "validate", "Check the secret data for problems" },
+	{ "debug",    "Toggle debug mode (shows real per-step state on collected secrets)" },
+	{ "help",     "Show this list" },
+}
+
+local function PrintSlashHelp()
+	print("|cffffcc00Secret Checklist|r — /secrets or /secretchecklist")
+	for _, row in ipairs(SLASH_HELP) do
+		local cmd = row[1] == "" and "/secrets" or ("/secrets " .. row[1])
+		print(("  |cff88ccff%-18s|r %s"):format(cmd, row[2]))
+	end
+end
+
 SlashCmdList.SECRETCHECKLIST = function(msg)
 	msg = (msg or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
+
+	if msg == "help" or msg == "?" then
+		PrintSlashHelp()
+		return
+	end
 
 	if msg == "options" or msg == "settings" then
 		if SC.OpenOptionsPanel then
@@ -750,10 +776,14 @@ SlashCmdList.SECRETCHECKLIST = function(msg)
 		if SC.ValidateData then
 			SC:ValidateData()
 		end
-	else
-		-- Default: open UI
+	elseif msg == "" then
 		if SC.OpenCollectionsSecretsTab then
 			SC:OpenCollectionsSecretsTab()
 		end
+	else
+		-- An unrecognised argument used to open the window, which looks
+		-- indistinguishable from the command having worked.
+		print(("|cffffcc00Secret Checklist:|r unknown command %q."):format(msg))
+		PrintSlashHelp()
 	end
 end

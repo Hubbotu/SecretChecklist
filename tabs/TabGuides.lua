@@ -74,6 +74,45 @@ local function SetWaypoints(list, label)
 	return placed
 end
 
+-- Status markers.
+--
+-- Collected/missing was signalled by a coloured dot and nothing else. Red and
+-- green are indistinguishable to a substantial minority of players, so the
+-- status of a row was simply unreadable for them. A glyph makes shape carry the
+-- meaning and leaves colour as reinforcement.
+--
+-- The atlases are checked for existence rather than assumed: SetAtlas on a name
+-- the client does not have fails silently and leaves a blank texture, which
+-- would be worse than the coloured dot it replaced.
+local STATUS_ATLAS = {
+	collected = "common-icon-checkmark",
+	missing   = "common-icon-redx",
+}
+
+local atlasAvailable = {}
+local function HasAtlas(name)
+	if atlasAvailable[name] == nil then
+		atlasAvailable[name] = (C_Texture and C_Texture.GetAtlasInfo
+			and C_Texture.GetAtlasInfo(name)) and true or false
+	end
+	return atlasAvailable[name]
+end
+
+-- Paints a status marker, falling back to the original coloured square when the
+-- atlas is unavailable. `size` is the fallback dot size; glyphs get a little more
+-- room so the shape is legible.
+local function SetStatusMarker(tex, status, size, r, g, b)
+	local atlas = STATUS_ATLAS[status]
+	if atlas and HasAtlas(atlas) then
+		tex:SetSize(size + 6, size + 6)
+		tex:SetAtlas(atlas)
+		tex:SetVertexColor(1, 1, 1, 1)
+	else
+		tex:SetSize(size, size)
+		tex:SetColorTexture(r, g, b)
+	end
+end
+
 local kindColors = {
 	mount       = { 0.6, 0.8, 1 },
 	pet         = { 0.6, 1, 0.6 },
@@ -1335,15 +1374,17 @@ function SC:BuildGuidesPanel(frame, L)
 				-- Status dot colour + label text colour
 				if st == "done" then
 					doneCount = doneCount + 1
-					row.ico:SetColorTexture(0, 1, 0)
+					SetStatusMarker(row.ico, "collected", 10, 0, 1, 0)
 					row.lbl:SetTextColor(0.53, 0.53, 0.53)
 					row.lbl:SetText(step.label)
 				elseif st == "ready" then
-					row.ico:SetColorTexture(1, 0.82, 0)
+					-- "ready" stays a gold square: it means the item is held but not
+					-- yet used, which is a third state neither glyph expresses.
+					SetStatusMarker(row.ico, nil, 10, 1, 0.82, 0)
 					row.lbl:SetTextColor(1, 0.82, 0)
 					row.lbl:SetText(step.label)
 				else
-					row.ico:SetColorTexture(1, 0, 0)
+					SetStatusMarker(row.ico, "missing", 10, 1, 0, 0)
 					row.lbl:SetTextColor(0.8, 0.8, 0.8)
 					local labelText = step.label
 					if step.mindseekerReq then
@@ -1403,13 +1444,13 @@ function SC:BuildGuidesPanel(frame, L)
 							end
 						end
 						if srDone then
-							sr.ico:SetColorTexture(0, 0.8, 0)
+							SetStatusMarker(sr.ico, "collected", 8, 0, 0.8, 0)
 							sr.lbl:SetTextColor(0.50, 0.50, 0.50)
 						elseif srReady then
-							sr.ico:SetColorTexture(1, 0.82, 0)
+							SetStatusMarker(sr.ico, nil, 8, 1, 0.82, 0)
 							sr.lbl:SetTextColor(1, 0.82, 0)
 						else
-							sr.ico:SetColorTexture(0.8, 0.2, 0.2)
+							SetStatusMarker(sr.ico, "missing", 8, 0.8, 0.2, 0.2)
 							sr.lbl:SetTextColor(0.80, 0.80, 0.80)
 						end
 						if sub.itemID then
@@ -1781,11 +1822,14 @@ function SC:BuildGuidesPanel(frame, L)
 				end
 
 				if isCol then
-					row.dot:SetColorTexture(0, 1, 0)
+					SetStatusMarker(row.dot, "collected", 6, 0, 1, 0)
 				elseif isMis then
-					row.dot:SetColorTexture(1, 0, 0)
+					SetStatusMarker(row.dot, "missing", 6, 1, 0, 0)
 				else
-					row.dot:SetColorTexture(0.5, 0.5, 0.5)
+					-- No glyph for "unknown" -- the data has not loaded yet rather
+					-- than resolved to a state, and a neutral dot says that better
+					-- than any symbol would.
+					SetStatusMarker(row.dot, nil, 6, 0.5, 0.5, 0.5)
 				end
 				row.dot:Show()
 

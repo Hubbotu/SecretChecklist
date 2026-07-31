@@ -66,8 +66,9 @@ function SC:BuildOverviewPanel(frame, L)
 		local button = CreateFrame("Button", nil, parent)
 		button:SetSize(BUTTON_WIDTH, BUTTON_HEIGHT)
 
-		-- Constrain hit rect to icon area only (left side, 56px width including border)
-		button:SetHitRectInsets(0, BUTTON_WIDTH - 56, 0, 0)
+		-- The whole row is clickable, name included. The hit rect used to be
+		-- constrained to the 56px icon, so clicking the secret's name -- the
+		-- larger and more obvious target -- did nothing at all.
 
 		-- Icon texture (shown when collected)
 		local iconTexture = button:CreateTexture(nil, "BORDER")
