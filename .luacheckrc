@@ -85,6 +85,7 @@ read_globals = {
 	"ITEM_QUALITY_COLORS",
 	"LE_PARTY_CATEGORY_HOME",
 	"LE_PARTY_CATEGORY_INSTANCE",
+	"RETRIEVING_DATA",
 	"SOUNDKIT",
 
 	-- Achievements, items, collections

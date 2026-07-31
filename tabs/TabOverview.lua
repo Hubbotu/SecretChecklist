@@ -223,6 +223,23 @@ function SC:BuildOverviewPanel(frame, L)
 				local achLink = GetAchievementLink and GetAchievementLink(entry.achievementID)
 				if achLink then
 					success = TryTooltip("SetHyperlink", achLink)
+					if success then
+						-- Blizzard's achievement tooltip resolves the earning
+						-- character's name from the GUID embedded in the link.
+						-- Achievements are account-wide but the link records which
+						-- character earned it, so for one earned on an alt that
+						-- lookup goes to the server and can stay unresolved --
+						-- leaving a RETRIEVING_DATA line sitting under the title
+						-- forever. Blank it rather than show the player a permanent
+						-- "Retrieving data" on a secret they have demonstrably
+						-- already completed.
+						for i = 2, GameTooltip:NumLines() do
+							local line = _G["GameTooltipTextLeft" .. i]
+							if line and line:GetText() == RETRIEVING_DATA then
+								line:SetText(" ")
+							end
+						end
+					end
 				end
 				if not success then
 					-- GetAchievementLink returns nil for an achievement the player
