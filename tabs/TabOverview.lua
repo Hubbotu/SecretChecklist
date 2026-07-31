@@ -46,9 +46,16 @@ function SC:BuildOverviewPanel(frame, L)
 	-- BUTTON CREATION
 	-- ==============================================
 
-	-- Safe tooltip helper: defined once here, shared by all buttons in the pool
-	local function TryTooltip(fn)
-		return pcall(fn) == true
+	-- Safe tooltip helper: defined once here, shared by all buttons in the pool.
+	--
+	-- Takes the GameTooltip method name and its arguments rather than a closure.
+	-- The closure form allocated a fresh function object per attempt, and a single
+	-- mouseover makes up to three attempts, so sweeping the cursor across a page
+	-- of 21 icons churned out several dozen short-lived closures.
+	local function TryTooltip(method, ...)
+		local fn = GameTooltip[method]
+		if not fn then return false end
+		return pcall(fn, GameTooltip, ...) == true
 	end
 
 	local function CreateSecretButton(parent, index)
@@ -131,17 +138,17 @@ function SC:BuildOverviewPanel(frame, L)
 
 			local success = false
 			if entry.kind == "toy" and entry.itemID then
-				success = TryTooltip(function() GameTooltip:SetToyByItemID(entry.itemID) end)
+				success = TryTooltip("SetToyByItemID", entry.itemID)
 			elseif entry.kind == "mount" then
 				if entry.mountID and C_MountJournal and C_MountJournal.GetMountInfoByID then
 					local _, spellID = C_MountJournal.GetMountInfoByID(entry.mountID)
-					if spellID then success = TryTooltip(function() GameTooltip:SetMountBySpellID(spellID) end) end
+					if spellID then success = TryTooltip("SetMountBySpellID", spellID) end
 				end
 				if not success and entry.spellID then
-					success = TryTooltip(function() GameTooltip:SetMountBySpellID(entry.spellID) end)
+					success = TryTooltip("SetMountBySpellID", entry.spellID)
 				end
 				if not success and entry.itemID then
-					success = TryTooltip(function() GameTooltip:SetItemByID(entry.itemID) end)
+					success = TryTooltip("SetItemByID", entry.itemID)
 				end
 				if success and C_MountJournal then
 					local mountID = entry.mountID
@@ -170,7 +177,7 @@ function SC:BuildOverviewPanel(frame, L)
 				end
 			elseif entry.kind == "pet" then
 				if entry.itemID then
-					success = TryTooltip(function() GameTooltip:SetItemByID(entry.itemID) end)
+					success = TryTooltip("SetItemByID", entry.itemID)
 				end
 				if success and entry.speciesID and C_PetJournal and C_PetJournal.GetPetInfoBySpeciesID then
 					local _, _, _, _, sourceText, description = C_PetJournal.GetPetInfoBySpeciesID(entry.speciesID)
@@ -208,11 +215,11 @@ function SC:BuildOverviewPanel(frame, L)
 					end
 				end
 			elseif entry.kind == "achievement" and entry.achievementID then
-				success = TryTooltip(function() GameTooltip:SetHyperlink("achievement:" .. entry.achievementID) end)
+				success = TryTooltip("SetHyperlink", "achievement:" .. entry.achievementID)
 			elseif entry.kind == "transmog" and entry.itemID then
-				success = TryTooltip(function() GameTooltip:SetItemByID(entry.itemID) end)
+				success = TryTooltip("SetItemByID", entry.itemID)
 			elseif entry.kind == "housing" and entry.itemID then
-				success = TryTooltip(function() GameTooltip:SetItemByID(entry.itemID) end)
+				success = TryTooltip("SetItemByID", entry.itemID)
 				if success and C_HousingCatalog and C_HousingCatalog.GetCatalogEntryInfoByItem then
 					local info = C_HousingCatalog.GetCatalogEntryInfoByItem(entry.itemID, true)
 					if info then
@@ -298,6 +305,21 @@ function SC:BuildOverviewPanel(frame, L)
 		local buttonIndex = 1
 		local row, col    = 0, 0
 
+		-- Theme lookups are invariant across the page, so resolve them once here
+		-- rather than per button. The ElvUI border colour in particular used to
+		-- cost an unpack(ElvUI) plus an unpack of its media table for every
+		-- uncollected icon, up to 21 times per redraw.
+		local themeName = SC.currentThemeName
+		local euiSkin   = (themeName == "EllesmereUI") and SC._euiSkin or nil
+		local useFlat   = ElvUI and themeName == "ElvUI"
+		local elvBorderR, elvBorderG, elvBorderB = 0.3, 0.3, 0.3
+		if useFlat then
+			local E = unpack(ElvUI)
+			if E and E.media and E.media.bordercolor then
+				elvBorderR, elvBorderG, elvBorderB = unpack(E.media.bordercolor)
+			end
+		end
+
 		for i = startIndex, endIndex do
 			local entry  = entries[i]
 			local button = GetButton(buttonIndex)
@@ -315,9 +337,6 @@ function SC:BuildOverviewPanel(frame, L)
 			button.iconTexture:SetShown(isCollected)
 			button.iconTextureUncollected:SetShown(not isCollected)
 
-			local themeName = SC.currentThemeName
-			local euiSkin   = (themeName == "EllesmereUI") and SC._euiSkin or nil
-			local useFlat   = ElvUI and themeName == "ElvUI"
 			if euiSkin then
 				-- EllesmereUI: squared, 1px-bordered icons in place of the round
 				-- atlas slot art, matching how EUI treats icons elsewhere.
@@ -346,9 +365,7 @@ function SC:BuildOverviewPanel(frame, L)
 						if isCollected then
 							button.iconFrame.backdrop:SetBackdropBorderColor(0.85, 0.65, 0.13, 1)
 						else
-							local E = unpack(ElvUI)
-							local br, bg, bb = unpack(E.media.bordercolor)
-							button.iconFrame.backdrop:SetBackdropBorderColor(br, bg, bb, 1)
+							button.iconFrame.backdrop:SetBackdropBorderColor(elvBorderR, elvBorderG, elvBorderB, 1)
 						end
 					end
 				end
