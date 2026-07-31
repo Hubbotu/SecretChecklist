@@ -19,13 +19,11 @@ function SC:BuildAboutPanel(frame, L)
 
 	local aboutVersion = aboutPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	aboutVersion:SetPoint("TOP", aboutPanel, "TOP", 0, -20)
-	aboutVersion:SetText(
-		"Version " .. (
-			C_AddOns and C_AddOns.GetAddOnMetadata
-			and C_AddOns.GetAddOnMetadata("SecretChecklist", "Version")
-			or "1.8.1"
-		)
-	)
+	-- SC.versionString is resolved once in SecretChecklistVersion.lua, which also
+	-- maps the packager's unsubstituted @project-version@ token to "dev". Reading
+	-- it here keeps a single source of truth -- this used to carry its own
+	-- hardcoded fallback, which had drifted three minor versions behind.
+	aboutVersion:SetText("Version " .. (SC.versionString or "unknown"))
 
 	local aboutDesc = aboutPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	aboutDesc:SetPoint("TOP", aboutVersion, "BOTTOM", 0, -8)

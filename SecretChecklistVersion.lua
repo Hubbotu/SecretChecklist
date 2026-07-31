@@ -9,6 +9,18 @@ local ADDON_PREFIX  = "SC_VERSIONCHK"
 local ADDON_VERSION = (C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata)(
     "SecretChecklist", "Version") or "0.0.0"
 
+-- The TOC carries the literal token @project-version@, which the BigWigs
+-- packager substitutes when it builds a release. Running straight from a git
+-- checkout leaves it unsubstituted, so treat that as an untagged dev build:
+-- it parses to 0, which would otherwise make every peer look newer and print
+-- an update notice on every session.
+local IS_DEV_BUILD = ADDON_VERSION:find("@", 1, true) ~= nil
+if IS_DEV_BUILD then
+    ADDON_VERSION = "dev"
+end
+SC.versionString = ADDON_VERSION
+SC.isDevBuild    = IS_DEV_BUILD
+
 -- Convert "major.minor.patch" to a sortable integer for numeric comparison.
 -- e.g. "1.8.4" → 10804
 local function VersionToInt(v)
@@ -35,6 +47,9 @@ local function GetMyFullName()
 end
 
 local function SendVersion()
+    -- A dev build has no meaningful version number; broadcasting 0 would only
+    -- make every other group member's copy look newer to them.
+    if IS_DEV_BUILD then return end
     local payload = tostring(MY_VERSION_INT)
     if IsInRaid() then
         local ch = (not IsInRaid(LE_PARTY_CATEGORY_HOME) and IsInRaid(LE_PARTY_CATEGORY_INSTANCE))
@@ -76,6 +91,9 @@ versionFrame:SetScript("OnEvent", function(_, event, arg1, arg2, arg3, arg4)
         local me = GetMyFullName()
         if me and arg4 == me then return end
         if arg4 == UnitName("player") then return end
+
+        -- A dev build parses to 0, so every peer would look newer.
+        if IS_DEV_BUILD then return end
 
         local theirInt = tonumber(arg2)
         if theirInt and theirInt > MY_VERSION_INT and not versionWarned then
