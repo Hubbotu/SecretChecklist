@@ -24,6 +24,56 @@ local select = select
 -- Colour used for each secret kind in tooltips and the detail pane kind label.
 -- Defined once at module level so neither MakeReqLinkRow nor Guides_ShowDetail
 -- allocate a new table on every call.
+-- Sets a single waypoint, preferring TomTom when the player has it.
+--
+-- C_Map.SetUserWaypoint raises a Lua error for a map that does not accept user
+-- waypoints -- instance interiors among them, and the step data contains
+-- dungeon coordinates -- so the map has to be checked first. Previously four
+-- copies of this logic called it unguarded.
+--
+-- Returns true if a waypoint was placed.
+local function SetWaypoint(wp, label)
+	if not (wp and wp.mapID and wp.x and wp.y) then return false end
+
+	if TomTom and TomTom.AddWaypoint then
+		TomTom:AddWaypoint(wp.mapID, wp.x, wp.y, { title = label or "", from = "Secret Checklist" })
+		return true
+	end
+
+	if C_Map.CanSetUserWaypointOnMap and not C_Map.CanSetUserWaypointOnMap(wp.mapID) then
+		print("|cffffcc00SecretChecklist:|r Blizzard's waypoint system does not support that "
+			.. "location. Install TomTom for waypoints there.")
+		return false
+	end
+
+	C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(wp.mapID, wp.x, wp.y))
+	C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+	return true
+end
+
+-- Sets every waypoint in a list. Blizzard's user waypoint is a single pin, so
+-- without TomTom only the first can be placed -- say so rather than silently
+-- dropping the rest, which is what the previous code did.
+local function SetWaypoints(list, label)
+	if not list or #list == 0 then return false end
+
+	if TomTom and TomTom.AddWaypoint then
+		local placed = false
+		for _, wp in ipairs(list) do
+			local title = wp.label and ((label or "") .. ": " .. wp.label) or label
+			placed = SetWaypoint(wp, title) or placed
+		end
+		return placed
+	end
+
+	local placed = SetWaypoint(list[1], label)
+	if placed and #list > 1 then
+		print(("|cffffcc00SecretChecklist:|r Set the first of %d waypoints. "
+			.. "Install TomTom to place them all at once."):format(#list))
+	end
+	return placed
+end
+
 local kindColors = {
 	mount       = { 0.6, 0.8, 1 },
 	pet         = { 0.6, 1, 0.6 },
@@ -698,31 +748,11 @@ function SC:BuildGuidesPanel(frame, L)
 		wpLbl:SetText("Set Waypoint")
 		wpBtn.lbl = wpLbl -- store reference for the rendering loop
 		wpBtn:SetScript("OnClick", function(self)
-			if self.waypoints then
-				if TomTom and TomTom.AddWaypoint then
-					for _, wp in ipairs(self.waypoints) do
-						local lbl = wp.label or row.lbl:GetText() or ""
-						TomTom:AddWaypoint(wp.mapID, wp.x, wp.y, { title = lbl, from = "Secret Checklist" })
-					end
-				else
-					-- Native C_Map supports only one waypoint — set the first one
-					local wp = self.waypoints[1]
-					if wp then
-						C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(wp.mapID, wp.x, wp.y))
-						C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-					end
-				end
-				return
-			end
-			-- Single waypoint
-			local wp = self.waypoint
-			if not wp then return end
 			local label = row.lbl:GetText() or ""
-			if TomTom and TomTom.AddWaypoint then
-				TomTom:AddWaypoint(wp.mapID, wp.x, wp.y, { title = label, from = "Secret Checklist" })
+			if self.waypoints then
+				SetWaypoints(self.waypoints, label)
 			else
-				C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(wp.mapID, wp.x, wp.y))
-				C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+				SetWaypoint(self.waypoint, label)
 			end
 		end)
 		wpBtn:Hide()
@@ -767,27 +797,9 @@ function SC:BuildGuidesPanel(frame, L)
 			srWp:SetScript("OnClick", function(self)
 				local label = self:GetParent().lbl:GetText() or ""
 				if self.waypoints then
-					if TomTom and TomTom.AddWaypoint then
-						for _, wp in ipairs(self.waypoints) do
-							local lbl = (wp.label and (label .. ": " .. wp.label)) or label
-							TomTom:AddWaypoint(wp.mapID, wp.x, wp.y, { title = lbl, from = "Secret Checklist" })
-						end
-					else
-						-- Native C_Map supports only one waypoint — set the first one
-						local wp = self.waypoints[1]
-						if wp then
-							C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(wp.mapID, wp.x, wp.y))
-							C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-						end
-					end
-				elseif self.waypoint then
-					local wp = self.waypoint
-					if TomTom and TomTom.AddWaypoint then
-						TomTom:AddWaypoint(wp.mapID, wp.x, wp.y, { title = label, from = "Secret Checklist" })
-					else
-						C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(wp.mapID, wp.x, wp.y))
-						C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-					end
+					SetWaypoints(self.waypoints, label)
+				else
+					SetWaypoint(self.waypoint, label)
 				end
 			end)
 			srWp:Hide()
