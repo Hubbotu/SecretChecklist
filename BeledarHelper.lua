@@ -78,6 +78,10 @@ local bh_state   = {
 local bh_ui      = {}
 local bh_frame   = CreateFrame("Frame")
 
+-- Defined at the bottom of the file; forward-declared so the START message
+-- handler above it can start the countdown ticker.
+local BH_StartCountdownTicker
+
 -- =============================================
 -- HELPERS
 -- =============================================
@@ -104,7 +108,7 @@ local function BH_IsHallowfall()
     return C_Map.GetBestMapForUnit("player") == BH_ZONE_ID
 end
 
-local function BH_GetRaidSlot()
+local function BH_ComputeRaidSlot()
     local members = {}
     if IsInRaid() then
         for i = 1, 40 do
@@ -143,6 +147,25 @@ local function BH_GetRaidSlot()
         end
     end
     return nil
+end
+
+-- The slot only changes when the roster does, but BH_UpdatePopup asks for it on
+-- every call -- and during a countdown that is every frame. Recomputing meant
+-- allocating a members table plus one table per raid member and sorting them,
+-- roughly 2,400 table allocations a second straight into the GC.
+local bh_cachedSlot = nil
+local bh_slotDirty  = true
+
+local function BH_InvalidateRaidSlot()
+    bh_slotDirty = true
+end
+
+local function BH_GetRaidSlot()
+    if bh_slotDirty then
+        bh_cachedSlot = BH_ComputeRaidSlot()
+        bh_slotDirty  = false
+    end
+    return bh_cachedSlot
 end
 
 local function BH_GetEmote(measure, slot)
@@ -415,6 +438,8 @@ local function BH_HandleMessage(message)
             bh_frame:UnregisterEvent("PLAYER_STARTED_MOVING")
             bh_frame:UnregisterEvent("PLAYER_STOPPED_MOVING")
             BH_UpdatePopup()
+            -- Attach the per-frame ticker only for the duration of this countdown.
+            BH_StartCountdownTicker()
         end
     end
 end
@@ -506,6 +531,8 @@ bh_frame:SetScript("OnEvent", function(_, event, ...)
         BH_UpdatePopup()
 
     elseif event == "GROUP_ROSTER_UPDATE" then
+        -- The only thing that can change our visual slot.
+        BH_InvalidateRaidSlot()
         BH_UpdatePopup()
 
     elseif event == "UNIT_AURA" then
@@ -552,17 +579,35 @@ bh_frame:SetScript("OnEvent", function(_, event, ...)
     end
 end)
 
--- OnUpdate: tick countdown and refresh button label
-bh_frame:SetScript("OnUpdate", function(_, elapsed)
-    if not bh_active then return end
-    if not (bh_ui.frame and bh_ui.frame:IsShown()) then return end
-    if not bh_state.countdownEndTime then return end
-    if bh_state.measureStarted then return end
-
-    local remaining = bh_state.countdownEndTime - GetTime()
-    if remaining <= 0 then
+-- Countdown ticker.
+--
+-- This used to be a permanent OnUpdate installed at file scope: it ran every
+-- frame, for every player, for the whole session, even for the overwhelming
+-- majority who never set foot in Hallowfall or join a Beledar group. It bailed
+-- out in four checks, but a per-frame Lua call that exists to do nothing is
+-- still the first thing anyone profiling addons goes looking for.
+--
+-- It is now attached only while a countdown is actually running -- a window of
+-- a few seconds per measure -- and detaches itself as soon as that ends, so the
+-- idle cost is zero.
+local function BH_CountdownTick()
+    if not (bh_active and bh_state.countdownEndTime) or bh_state.measureStarted then
+        bh_frame:SetScript("OnUpdate", nil)
+        return
+    end
+    if bh_state.countdownEndTime - GetTime() <= 0 then
         bh_state.measureStarted   = true
         bh_state.countdownEndTime = nil
+        BH_UpdatePopup()
+        bh_frame:SetScript("OnUpdate", nil)
+        return
     end
     BH_UpdatePopup()
-end)
+end
+
+-- Call whenever countdownEndTime is set. Idempotent.
+BH_StartCountdownTicker = function()
+    if bh_active and bh_state.countdownEndTime and not bh_frame:GetScript("OnUpdate") then
+        bh_frame:SetScript("OnUpdate", BH_CountdownTick)
+    end
+end
