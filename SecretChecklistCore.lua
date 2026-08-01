@@ -469,7 +469,8 @@ local function Initialize()
 				end,
 				function()
 					local f = tabFilters[SC.currentTab]; if f then
-						f.showCollected = not (f.showCollected ~= false); OnFilterChanged()
+						-- nil counts as enabled, so toggling an unset filter turns it off.
+					f.showCollected = (f.showCollected == false); OnFilterChanged()
 					end
 				end)
 			rootDescription:CreateCheckbox(
@@ -479,7 +480,8 @@ local function Initialize()
 				end,
 				function()
 					local f = tabFilters[SC.currentTab]; if f then
-						f.showMissing = not (f.showMissing ~= false); OnFilterChanged()
+						-- nil counts as enabled, so toggling an unset filter turns it off.
+					f.showMissing = (f.showMissing == false); OnFilterChanged()
 					end
 				end)
 			rootDescription:CreateCheckbox(

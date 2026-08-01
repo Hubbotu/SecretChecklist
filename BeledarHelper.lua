@@ -46,7 +46,6 @@ local BH_DS_DEC    = {
 
 local bh_dsMeasures = nil  -- decoded 25×40 table; nil until leader broadcasts
 local bh_dsBuffer   = {}   -- chunk accumulator
-local bh_dsTotal    = nil  -- expected chunk count
 
 local function BH_DecodeMeasures(str)
     if #str ~= 1000 then return nil end
@@ -451,12 +450,10 @@ local function BH_HandleDataSync(message)
     local action = message:match("^([^:]+)")
     if action == "ANN" then
         bh_dsBuffer = {}
-        bh_dsTotal  = nil
     elseif action == "DAT" then
         local n, total, data = message:match("^DAT:MEASURES:(%d+)/(%d+):(.+)$")
         n, total = tonumber(n), tonumber(total)
         if n and total and data then
-            bh_dsTotal     = total
             bh_dsBuffer[n] = data
             local count = 0
             for _ in pairs(bh_dsBuffer) do count = count + 1 end

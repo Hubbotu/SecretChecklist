@@ -57,6 +57,7 @@ read_globals = {
 	"C_Reputation",
 	"C_Spell",
 	"C_SuperTrack",
+	"C_Texture",
 	"C_Timer",
 	"C_ToyBox",
 	"C_TransmogCollection",
