@@ -14,6 +14,8 @@
 local SC = _G.SecretChecklist
 if not SC then return end
 
+local L = _G.SecretChecklistLocale or {}
+
 -- ==============================================
 -- MIXIN  (referenced by name in the XML template)
 -- ==============================================
@@ -67,7 +69,7 @@ end
 function SecretChecklist_AlertFrameMixin:SetAlert(entry, icon)
 	self.entry = entry
 	self.Icon.Texture:SetTexture(icon or "Interface\\Icons\\INV_Misc_QuestionMark")
-	self.Name:SetText("Secret Collected!")
+	self.Name:SetText(L["ALERT_TITLE"] or "Secret Collected!")
 	self.Label:SetText(SC:GetEntryName(entry))
 
 	-- Trigger the glow / shine animations
@@ -80,7 +82,7 @@ function SecretChecklist_AlertFrameMixin:OnEnter()
 	GameTooltip:SetOwner(self, "ANCHOR_NONE")
 	GameTooltip:SetPoint("BOTTOMLEFT", self, "TOPRIGHT", -10, -2)
 	GameTooltip:SetText(SC:GetEntryName(self.entry), 1, 1, 1)
-	GameTooltip:AddLine("Click to view guide", 0.6, 0.6, 0.6)
+	GameTooltip:AddLine(L["ALERT_CLICK_VIEW"] or "Click to view guide", 0.6, 0.6, 0.6)
 	GameTooltip:Show()
 end
 

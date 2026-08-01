@@ -6,6 +6,8 @@
 local SC = _G.SecretChecklist
 if not SC then return end
 
+local L = _G.SecretChecklistLocale or {}
+
 -- ==============================================
 -- COPY-LINK DIALOG
 -- ==============================================
@@ -41,7 +43,7 @@ local function CreateCopyDialog()
 
 	local label = dialog:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	label:SetPoint("TOPLEFT", dialog, "TOPLEFT", 8, -5)
-	label:SetText("Ctrl+C to copy  ·  Esc to close")
+	label:SetText(L["COPY_HINT"] or "Ctrl+C to copy  ·  Esc to close")
 	label:SetTextColor(0.65, 0.65, 0.65)
 
 	local box = CreateFrame("EditBox", nil, dialog)

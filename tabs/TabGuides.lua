@@ -21,6 +21,10 @@ local math_min, math_max = math.min, math.max
 local math_rad = math.rad
 local select = select
 
+-- File-level locale accessor. BuildGuidesPanel also receives L as a parameter
+-- (the same table); this one serves the module-scope helpers defined above it.
+local L = _G.SecretChecklistLocale or {}
+
 -- Colour used for each secret kind in tooltips and the detail pane kind label.
 -- Defined once at module level so neither MakeReqLinkRow nor Guides_ShowDetail
 -- allocate a new table on every call.
@@ -41,8 +45,9 @@ local function SetWaypoint(wp, label)
 	end
 
 	if C_Map.CanSetUserWaypointOnMap and not C_Map.CanSetUserWaypointOnMap(wp.mapID) then
-		print("|cffffcc00SecretChecklist:|r Blizzard's waypoint system does not support that "
-			.. "location. Install TomTom for waypoints there.")
+		print("|cffffcc00SecretChecklist:|r " .. (L["GUIDES_WAYPOINT_UNSUPPORTED"]
+			or "Blizzard's waypoint system does not support that location. "
+			.. "Install TomTom for waypoints there."))
 		return false
 	end
 
@@ -68,8 +73,9 @@ local function SetWaypoints(list, label)
 
 	local placed = SetWaypoint(list[1], label)
 	if placed and #list > 1 then
-		print(("|cffffcc00SecretChecklist:|r Set the first of %d waypoints. "
-			.. "Install TomTom to place them all at once."):format(#list))
+		print("|cffffcc00SecretChecklist:|r " .. (L["GUIDES_WAYPOINT_PARTIAL"]
+			or "Set the first of %d waypoints. Install TomTom to place them all at once.")
+			:format(#list))
 	end
 	return placed
 end
@@ -390,8 +396,8 @@ function SC:BuildGuidesPanel(frame, L)
 		return btn
 	end
 
-	local infoTab  = MakeDetailTab("Info")
-	local modelTab = MakeDetailTab("Model")
+	local infoTab  = MakeDetailTab(L["GUIDES_TAB_INFO"] or "Info")
+	local modelTab = MakeDetailTab(L["GUIDES_TAB_MODEL"] or "Model")
 	-- Split tab bar in half: "BOTTOM" anchor = horizontal center of parent
 	infoTab:SetPoint("TOPLEFT", detailTabBar, "TOPLEFT", 0, 0)
 	infoTab:SetPoint("BOTTOMRIGHT", detailTabBar, "BOTTOM", 0, 0)
@@ -412,8 +418,8 @@ function SC:BuildGuidesPanel(frame, L)
 
 	-- ---- Skill-line side-tab buttons (sidetabs style; shown/hidden by ApplyGuideStyle) ----
 	-- Icons: inv-misc-notescript1d (Info) and inv-misc-notepicture1a (Model)
-	local infoSkBtn       = MakeSkillLineTab(1505956, "Info")
-	local modelSkBtn      = MakeSkillLineTab(1505947, "Model")
+	local infoSkBtn       = MakeSkillLineTab(1505956, L["GUIDES_TAB_INFO"] or "Info")
+	local modelSkBtn      = MakeSkillLineTab(1505947, L["GUIDES_TAB_MODEL"] or "Model")
 	SC.guidesSkillTabBtns = { infoSkBtn, modelSkBtn }
 	infoSkBtn:SetPoint("TOPLEFT", detailPane, "TOPRIGHT", 22, -36)
 	modelSkBtn:SetPoint("TOPLEFT", infoSkBtn, "BOTTOMLEFT", 0, -17)
@@ -624,7 +630,7 @@ function SC:BuildGuidesPanel(frame, L)
 			elseif st == "missing" then
 				GameTooltip:AddLine(L["TOOLTIP_NOT_COLLECTED"] or "Not collected", 1, 0, 0)
 			end
-			GameTooltip:AddLine("Click to view", 0.55, 0.55, 0.55)
+			GameTooltip:AddLine(L["GUIDES_CLICK_VIEW"] or "Click to view", 0.55, 0.55, 0.55)
 			GameTooltip:Show()
 		end)
 		btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -672,7 +678,7 @@ function SC:BuildGuidesPanel(frame, L)
 	local linkBtn = CreateFrame("DropdownButton", nil, detailPane, "WowStyle1FilterDropdownTemplate")
 	linkBtn:SetSize(90, 22)
 	linkBtn:SetPoint("BOTTOMRIGHT", detailPane, "BOTTOMRIGHT", 0, GP_PAD)
-	linkBtn:SetText("Guide")
+	linkBtn:SetText(L["GUIDES_GUIDE_BUTTON"] or "Guide")
 	linkBtn.currentURL = ""
 	linkBtn:SetEnabled(false) -- greyed until a URL is present
 	SC.guidesLinkBtn = linkBtn -- exported for theme skinning
@@ -689,11 +695,11 @@ function SC:BuildGuidesPanel(frame, L)
 	end
 	linkBtn:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-		GameTooltip:SetText("Guide", 1, 0.82, 0)
+		GameTooltip:SetText(L["GUIDES_GUIDE_BUTTON"] or "Guide", 1, 0.82, 0)
 		if self.currentURL ~= "" then
-			GameTooltip:AddLine("Click to copy link", 0.8, 0.8, 0.8)
+			GameTooltip:AddLine(L["GUIDES_CLICK_COPY"] or "Click to copy link", 0.8, 0.8, 0.8)
 		else
-			GameTooltip:AddLine("No guide link yet", 0.6, 0.6, 0.6)
+			GameTooltip:AddLine(L["GUIDES_NO_GUIDE_LINK"] or "No guide link yet", 0.6, 0.6, 0.6)
 		end
 		GameTooltip:Show()
 	end)
@@ -813,7 +819,7 @@ function SC:BuildGuidesPanel(frame, L)
 		wpLbl:SetPoint("BOTTOM", wpBtn, "BOTTOM", 0, 0)
 		wpLbl:SetJustifyH("LEFT")
 		wpLbl:SetTextColor(0.4, 0.78, 1)
-		wpLbl:SetText("Set Waypoint")
+		wpLbl:SetText(L["GUIDES_SET_WAYPOINT"] or "Set Waypoint")
 		wpBtn.lbl = wpLbl -- store reference for the rendering loop
 		wpBtn:SetScript("OnClick", function(self)
 			local label = row.lbl:GetText() or ""
@@ -858,7 +864,9 @@ function SC:BuildGuidesPanel(frame, L)
 			srWpIco:SetAtlas("Waypoint-MapPin-Tracked")
 			srWp:SetScript("OnEnter", function(self)
 				GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-				GameTooltip:SetText(self.waypoints and "Set All Waypoints" or "Set Waypoint")
+				GameTooltip:SetText(self.waypoints
+					and (L["GUIDES_SET_ALL_WAYPOINTS"] or "Set All Waypoints")
+					or (L["GUIDES_SET_WAYPOINT"] or "Set Waypoint"))
 				GameTooltip:Show()
 			end)
 			srWp:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -1339,7 +1347,8 @@ function SC:BuildGuidesPanel(frame, L)
 							count = count + 1
 						end
 					end
-					labelText = labelText .. "  (" .. count .. " / " .. step.mindseekerReq .. " secrets)"
+					labelText = labelText .. "  " .. (L["GUIDES_MINDSEEKER_REQ"] or "(%d / %d secrets)")
+						:format(count, step.mindseekerReq)
 				elseif step.renownReq and C_MajorFactions and C_MajorFactions.GetCurrentRenownLevel then
 					local current = C_MajorFactions.GetCurrentRenownLevel(step.renownReq.factionID) or 0
 					labelText = labelText .. "  (" .. current .. " / " .. step.renownReq.level .. ")"
@@ -1348,7 +1357,8 @@ function SC:BuildGuidesPanel(frame, L)
 					C_Reputation.GetFactionDataByID(step.repReq.factionID)
 					local current = (data and data.reaction) or 0
 					local target = step.repReq.standingName or step.repReq.standingID
-					labelText = labelText .. "  (Rank " .. current .. " / " .. target .. ")"
+					labelText = labelText .. "  " .. (L["GUIDES_RANK_REQ"] or "(Rank %d / %s)")
+						:format(current, tostring(target))
 				elseif resolvedSubs then
 					labelText = labelText .. "  (" .. subsDone .. " / " .. subsTotal .. ")"
 				end
@@ -1477,7 +1487,7 @@ function SC:BuildGuidesPanel(frame, L)
 			if step.waypoints then
 				wpBtn.waypoints = step.waypoints
 				wpBtn.waypoint  = nil
-				wpBtn.lbl:SetText("Set All Waypoints")
+				wpBtn.lbl:SetText(L["GUIDES_SET_ALL_WAYPOINTS"] or "Set All Waypoints")
 				local wpAnchor = itemBtn:IsShown() and itemBtn or (lastSubstepFrame or np.noteLbl)
 				wpBtn:SetPoint("TOPLEFT", wpAnchor, "BOTTOMLEFT", 0, -4)
 				wpBtn:SetPoint("RIGHT", np, "RIGHT", -6, 0)
@@ -1485,7 +1495,7 @@ function SC:BuildGuidesPanel(frame, L)
 			elseif step.waypoint then
 				wpBtn.waypoint  = step.waypoint
 				wpBtn.waypoints = nil
-				wpBtn.lbl:SetText("Set Waypoint")
+				wpBtn.lbl:SetText(L["GUIDES_SET_WAYPOINT"] or "Set Waypoint")
 				local wpAnchor = itemBtn:IsShown() and itemBtn or (lastSubstepFrame or np.noteLbl)
 				wpBtn:SetPoint("TOPLEFT", wpAnchor, "BOTTOMLEFT", 0, -4)
 				wpBtn:SetPoint("RIGHT", np, "RIGHT", -6, 0)
@@ -1494,7 +1504,7 @@ function SC:BuildGuidesPanel(frame, L)
 				local fkey      = (UnitFactionGroup and UnitFactionGroup("player") == "Alliance") and "alliance" or "horde"
 				wpBtn.waypoint  = step.factionWaypoint[fkey]
 				wpBtn.waypoints = nil
-				wpBtn.lbl:SetText("Set Waypoint")
+				wpBtn.lbl:SetText(L["GUIDES_SET_WAYPOINT"] or "Set Waypoint")
 				local wpAnchor = itemBtn:IsShown() and itemBtn or (lastSubstepFrame or np.noteLbl)
 				wpBtn:SetPoint("TOPLEFT", wpAnchor, "BOTTOMLEFT", 0, -4)
 				wpBtn:SetPoint("RIGHT", np, "RIGHT", -6, 0)
@@ -1530,7 +1540,8 @@ function SC:BuildGuidesPanel(frame, L)
 		-- Collapse by default when the secret is already collected
 		stepsCollapsed = (SC:GetEntryStatus(entry) == "collected")
 		local prefix = stepsCollapsed and "+ " or "- "
-		stepsHeader.lbl:SetText(prefix .. "Progress  " .. doneCount .. " / " .. numSteps .. "  steps")
+		stepsHeader.lbl:SetText(prefix
+				.. (L["GUIDES_PROGRESS"] or "Progress  %d / %d  steps"):format(doneCount, numSteps))
 		stepsHeader:Show()
 	else
 		stepsHeader:Hide()
@@ -1643,7 +1654,7 @@ function SC:BuildGuidesPanel(frame, L)
 		if type(entry.desc) == "string" and entry.desc ~= "" then descText = SC:T(entry.desc) end
 		-- "Part of" cross-reference shown at top of the source field
 		if type(entry.partOf) == "string" and entry.partOf ~= "" then
-			local prefix = "Part of: " .. SC:T(entry.partOf)
+			local prefix = (L["GUIDES_PART_OF"] or "Part of: %s"):format(SC:T(entry.partOf))
 			sourceText = sourceText ~= "" and (prefix .. "\n" .. sourceText) or prefix
 		end
 		detailSource:SetText(sourceText)
@@ -1667,7 +1678,7 @@ function SC:BuildGuidesPanel(frame, L)
 					target = e; break
 				end
 			end
-			row.lbl:SetText(i == 1 and "Requires:" or "")
+			row.lbl:SetText(i == 1 and (L["GUIDES_REQUIRES"] or "Requires:") or "")
 			row.btn.targetEntry = target
 			row.btn.lbl:SetText(name)
 			if target then
@@ -1693,7 +1704,7 @@ function SC:BuildGuidesPanel(frame, L)
 					target = e; break
 				end
 			end
-			row.lbl:SetText(i == 1 and "Required for:" or "")
+			row.lbl:SetText(i == 1 and (L["GUIDES_REQUIRED_FOR"] or "Required for:") or "")
 			row.btn.targetEntry = target
 			row.btn.lbl:SetText(name)
 			if target then

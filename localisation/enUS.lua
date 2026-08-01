@@ -76,6 +76,36 @@ L["CMD_MINIMAP_HIDE"] = "Minimap button hidden."
 -- Status Messages
 L["DATA_NOT_READY"] = "Collection data not ready yet. Try opening Collections once."
 L["UNKNOWN"] = "(unknown)"
+-- Guides panel
+L["GUIDES_TAB_INFO"]        = "Info"
+L["GUIDES_TAB_MODEL"]       = "Model"
+L["GUIDES_GUIDE_BUTTON"]    = "Guide"
+L["GUIDES_CLICK_COPY"]      = "Click to copy link"
+L["GUIDES_NO_GUIDE_LINK"]   = "No guide link yet"
+L["GUIDES_CLICK_VIEW"]      = "Click to view"
+L["GUIDES_REQUIRES"]        = "Requires:"
+L["GUIDES_REQUIRED_FOR"]    = "Required for:"
+-- %s is the name of the secret this one belongs to.
+L["GUIDES_PART_OF"]         = "Part of: %s"
+-- %d done, %d total.
+L["GUIDES_PROGRESS"]        = "Progress  %d / %d  steps"
+-- %d collected, %d required.
+L["GUIDES_MINDSEEKER_REQ"]  = "(%d / %d secrets)"
+-- %d current standing, %s required standing.
+L["GUIDES_RANK_REQ"]        = "(Rank %d / %s)"
+L["GUIDES_SET_WAYPOINT"]    = "Set Waypoint"
+L["GUIDES_SET_ALL_WAYPOINTS"] = "Set All Waypoints"
+L["GUIDES_WAYPOINT_UNSUPPORTED"] = "Blizzard's waypoint system does not support that location. Install TomTom for waypoints there."
+-- %d is how many waypoints the step has.
+L["GUIDES_WAYPOINT_PARTIAL"] = "Set the first of %d waypoints. Install TomTom to place them all at once."
+
+-- Copy dialog
+L["COPY_HINT"]            = "Ctrl+C to copy  ·  Esc to close"
+
+-- Collection toast
+L["ALERT_TITLE"]          = "Secret Collected!"
+L["ALERT_CLICK_VIEW"]     = "Click to view guide"
+
 -- Tabs
 L["TAB_OVERVIEW"]         = "Overview"
 L["TAB_GUIDES"]           = "Guides"
