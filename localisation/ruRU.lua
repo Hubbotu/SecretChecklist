@@ -91,4 +91,47 @@ L["SETTINGS_THEME_DESC"] = "Выберите визуальную тему дл�
 -- Minimap button
 L["TOOLTIP_RIGHT_CLICK_OPTIONS"] = "ПКМ: открыть настройки"
 
+-- ---------------------------------------------------------------------------
+-- Not yet translated. Uncomment a line and fill it in; anything left commented
+-- falls back to English. Do NOT leave a key assigned to an empty string.
+--
+-- The %d / %s placeholders may be reordered to suit Russian word order, but
+-- every placeholder in the English must appear exactly once in the translation.
+-- ---------------------------------------------------------------------------
+
+-- Tabs
+-- L["TAB_OVERVIEW"]              = ""
+-- L["TAB_GUIDES"]                = ""
+
+-- Guides panel
+-- L["GUIDES_TAB_INFO"]           = ""
+-- L["GUIDES_TAB_MODEL"]          = ""
+-- L["GUIDES_GUIDE_BUTTON"]       = ""
+-- L["GUIDES_CLICK_COPY"]         = ""
+-- L["GUIDES_NO_GUIDE_LINK"]      = ""
+-- L["GUIDES_CLICK_VIEW"]         = ""
+-- L["GUIDES_REQUIRES"]           = ""
+-- L["GUIDES_REQUIRED_FOR"]       = ""
+-- L["GUIDES_PART_OF"]            = ""   -- "Part of: %s"
+-- L["GUIDES_PROGRESS"]           = ""   -- "Progress  %d / %d  steps"
+-- L["GUIDES_MINDSEEKER_REQ"]     = ""   -- "(%d / %d secrets)"
+-- L["GUIDES_RANK_REQ"]           = ""   -- "(Rank %d / %s)"
+-- L["GUIDES_SET_WAYPOINT"]       = ""
+-- L["GUIDES_SET_ALL_WAYPOINTS"]  = ""
+-- L["GUIDES_WAYPOINT_UNSUPPORTED"] = ""
+-- L["GUIDES_WAYPOINT_PARTIAL"]   = ""   -- "%d waypoints"
+
+-- Copy dialog
+-- L["COPY_HINT"]                 = ""
+
+-- Collection toast
+-- L["ALERT_TITLE"]               = ""
+-- L["ALERT_CLICK_VIEW"]          = ""
+
+-- Settings
+-- L["SETTINGS_ADDON_COMPARTMENT"]      = ""
+-- L["SETTINGS_ADDON_COMPARTMENT_DESC"] = ""
+-- L["SETTINGS_ALERTS"]                 = ""
+-- L["SETTINGS_ALERTS_DESC"]            = ""
+
 _G.SecretChecklistLocale = L

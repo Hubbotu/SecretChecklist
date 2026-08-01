@@ -149,6 +149,22 @@ function SecretChecklist_OnAddonCompartmentLeave(button, addonInfo)
 	GameTooltip:Hide()
 end
 
+-- An empty UI translation has to behave as an absent one.
+--
+-- Every call site is written `L["KEY"] or "English"`, and "" is truthy in Lua,
+-- so a locale file containing L["TAB_GUIDES"] = "" would render a blank label
+-- rather than falling back. That is a very easy line for a translator to leave
+-- behind, and the result looks like a bug in the addon rather than a gap in the
+-- translation. Runs once, straight after locale.xml has loaded every locale.
+do
+	local locale = _G.SecretChecklistLocale
+	if type(locale) == "table" then
+		for key, value in pairs(locale) do
+			if value == "" then locale[key] = nil end
+		end
+	end
+end
+
 -- ==============================================
 -- DATA STRINGS
 -- ==============================================
