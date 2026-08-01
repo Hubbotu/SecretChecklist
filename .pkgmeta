@@ -12,3 +12,9 @@ ignore:
   - tools
 
 license-output: LICENSE
+
+# Release notes on CurseForge and Wago come from this file rather than from the
+# commit log, which is written for maintainers and not for players.
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown

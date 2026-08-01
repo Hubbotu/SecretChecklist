@@ -21,6 +21,7 @@ A World of Warcraft addon that helps you track and check your progress on secret
 - **Visual Feedback**: Icons are colored when collected, greyed out when missing
 - **Progress Counters**: Live "collected / total" counts for all secrets and for Mind-Seeker secrets
 - **Guides Tab**: Detailed view of each secret with description, wowhead guide link, and an interactive 3D model viewer
+- **Search**: Find any secret by name, zone, or anything mentioned in its steps — searching "Kosumoth" or "Tazavesh" works as well as searching the item name
 - **Progress Steps**: Step-by-step walkthrough per secret with click-to-waypoint support (via TomTom or built-in arrow)
 - **3D Model Viewer**: Previews mounts, pets, transmog worn on your character, housing items, and weapons in a live model scene
 - **Click-to-Navigate**: Click any icon in the Overview to jump directly to its Guides entry; Ctrl+Click inserts an item or achievement link into your active chat box
@@ -28,6 +29,9 @@ A World of Warcraft addon that helps you track and check your progress on secret
 - **Custom Lists**: Easily edit the list to track the secrets you want
 - **Pre-Configured**: Comes with 52 secrets ready to track
 - **Live Requirement Checks**: Step progress automatically checks renown level, faction reputation, and Mind-Seeker secret count from the game API — shown inline as e.g. `(5 / 8)` when not yet complete
+- **Themes**: Default, ElvUI, and EllesmereUI looks, matching whichever UI you run
+- **Accessible Status Icons**: Collected and missing are marked with a checkmark and a cross, not colour alone
+- **Translatable**: Both the interface and the guide content itself can be translated — see [Translating](#translating)
 - **About Tab**: Always-visible About tab with addon credits and community links
 
 ## Installation
@@ -50,7 +54,9 @@ Both `/secrets` and `/secretchecklist` work as aliases:
 | `/secrets options` | Open the SecretChecklist options |
 | `/secrets minimap` | Toggle minimap button visibility |
 | `/secrets alert` | Fire a test collection toast |
-| `/secrets debug` | Toggle debug mode (shows per-step state on completed secrets) |
+| `/secrets validate` | Check the secret data for problems |
+| `/secrets debug` | Toggle debug mode (shows the real per-step state on collected secrets) |
+| `/secrets help` | List these commands |
 
 - **Click an overview icon** to jump directly to that entry's full guide in the Guides tab
 - **Ctrl+Click an overview icon** to insert an item or achievement link into your active chat box
@@ -65,6 +71,37 @@ Both `/secrets` and `/secretchecklist` work as aliases:
 ## Tracked Secrets
 
 Comes pre-configured with **52 secret collectibles** across mounts, pets, toys, achievements, transmog, quests, housing, and mysteries — with more being added regularly.
+
+## Translating
+
+Two separate files, because they are two different jobs:
+
+| File | Contents |
+|---|---|
+| `localisation/<locale>.lua` | Interface labels — buttons, tabs, tooltips, settings |
+| `localisation/data/<locale>.lua` | Guide content — every step label, note, source and description |
+
+Guide content is keyed by its English text rather than by an id, so nothing in
+the data file needs changing to add a language, and a partly finished
+translation falls back to English string by string rather than all at once.
+
+To start a new language, or to pick up strings added since the last pass:
+
+```
+python tools/extract-strings.py --locale frFR
+```
+
+It writes `localisation/data/frFR.lua` with every string listed and preserves
+any translations already there, so it is safe to re-run. Add the new file to
+`localisation/locale.xml` alongside the others.
+
+Notes for translators:
+
+- A line left empty falls back to English. Nothing breaks if you skip one.
+- Placeholders such as `%d` and `%s` may be moved to suit your word order, but
+  each one must appear exactly once in the translation.
+- Changing an English string in the data file orphans its translation; re-running
+  the extractor shows which strings need another look.
 
 ### Saving Your Preferences
 
