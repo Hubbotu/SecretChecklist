@@ -84,23 +84,21 @@ local BH_StartCountdownTicker
 -- =============================================
 -- HELPERS
 -- =============================================
--- There is no UnitCreatureID in the WoW API; the NPC id has to be parsed out of
--- the unit GUID. GUID layout for NPCs is:
---   Creature-0-<server>-<instance>-<zoneUID>-<npcID>-<spawnUID>
--- Restricting to Creature/Vehicle avoids matching a player GUID whose server id
--- happens to equal BH_NPC_ID.
-local function BH_GetNpcID(unit)
-    local guid = UnitGUID(unit)
-    if not guid then return nil end
-    local unitType, _, _, _, _, npcID = strsplit("-", guid)
-    if unitType == "Creature" or unitType == "Vehicle" then
-        return tonumber(npcID)
-    end
-    return nil
-end
-
+-- Do NOT reimplement this by parsing UnitGUID.
+--
+-- That is the obvious-looking alternative and it is wrong on current clients:
+-- UnitGUID returns a *secret string*, and splitting or converting one raises
+--   "attempt to perform string conversion on a secret string value"
+-- and taints execution. Taint is not confined to the addon that causes it, so a
+-- helper for one NPC in one zone ends up breaking unrelated addons and
+-- Blizzard's own UI. This runs from PLAYER_TARGET_CHANGED, so it fires on every
+-- target change -- it was reported 350 times in a single session.
+--
+-- UnitCreatureID answers the question directly and never touches the GUID,
+-- which is presumably why it exists.
 local function BH_IsTargetFlame()
-    return BH_GetNpcID("target") == BH_NPC_ID
+    local id = UnitCreatureID("target")
+    return id and tonumber(id) == BH_NPC_ID
 end
 
 local function BH_IsHallowfall()

@@ -112,6 +112,7 @@ read_globals = {
 	"IsInGroup",
 	"IsInRaid",
 	"UnitFactionGroup",
+	"UnitCreatureID", -- present on some clients; always called behind a guard
 	"UnitFullName",
 	"UnitGUID",
 	"UnitIsUnit",

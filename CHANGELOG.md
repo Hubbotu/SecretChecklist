@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1
+
+- **Fixed an error that fired every time you changed target**, introduced in
+  2.0.0. It also tainted execution, which can cause problems in other addons
+  and in Blizzard's own interface. Please update.
+
 ## 2.0.0
 
 A large maintenance release. Everything below is something you can see or use.
