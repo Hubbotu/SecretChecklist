@@ -11,9 +11,26 @@
 -- no duplicate popups ever appear.
 -- =============================================================
 
+local SC = _G.SecretChecklist
+
 local BH_PREFIX   = "BeledarOrch"
 local BH_NPC_ID   = 255888   -- Divine Flame of Beledar (Hallowfall)
 local BH_ZONE_ID  = 2215     -- Hallowfall
+
+-- Panel geometry
+local BH_PANEL_W  = 252
+local BH_PANEL_H  = 128
+local BH_HEADER_H = 24
+
+-- Reads a colour from the active theme, falling back to the Default palette if
+-- the theme registry is unavailable. This file used to hardcode a tooltip
+-- backdrop and so was the one part of the addon that ignored the theme entirely.
+local function BH_Color(key, fallback)
+    if SC and SC.ThemeColor then
+        return SC:ThemeColor(key)
+    end
+    return fallback
+end
 
 -- =============================================
 -- EMOTE DEFINITIONS (mirrors BeledarOrchestra)
@@ -80,6 +97,10 @@ local bh_frame   = CreateFrame("Frame")
 -- Defined at the bottom of the file; forward-declared so the START message
 -- handler above it can start the countdown ticker.
 local BH_StartCountdownTicker
+
+-- Defined alongside BH_CreatePopup; forward-declared so BH_UpdatePopup, which
+-- comes first, can repaint the panel when it shows it.
+local BH_ApplyPopupTheme
 
 -- =============================================
 -- HELPERS
@@ -191,6 +212,8 @@ local function BH_UpdatePopup()
     if bh_state.closed then return end
 
     if not bh_ui.frame:IsShown() then
+        -- Repaint on show: the player may have changed theme since last time.
+        if BH_ApplyPopupTheme then BH_ApplyPopupTheme() end
         bh_ui.frame:Show()
     end
 
@@ -297,66 +320,134 @@ local function BH_PressEmote()
     BH_UpdatePopup()
 end
 
+-- Recolours the panel from the active theme. Applied when the popup is shown
+-- rather than through a theme-change callback: it is shown and hidden on every
+-- target change, so the next show repaints it, and that avoids adding another
+-- global hook for a frame most players never see.
+BH_ApplyPopupTheme = function()
+    local f = bh_ui.frame
+    if not f then return end
+
+    local panel  = BH_Color("insetBg", { 0.12, 0.10, 0.08, 0.98 })
+    local border = BH_Color("divider", { 0.30, 0.25, 0.20, 0.80 })
+    local header = BH_Color("rowSel",  { 0.25, 0.20, 0.10, 0.60 })
+
+    -- Floating over the world, so keep it readable even when the theme's panel
+    -- fill is semi-transparent.
+    f:SetBackdropColor(panel[1], panel[2], panel[3], math.max(panel[4] or 1, 0.92))
+    f:SetBackdropBorderColor(border[1], border[2], border[3], 1)
+    bh_ui.headerBg:SetColorTexture(header[1], header[2], header[3], math.max(header[4] or 0.6, 0.55))
+    bh_ui.headerLine:SetColorTexture(border[1], border[2], border[3], 1)
+end
+
 local function BH_CreatePopup()
     local f = CreateFrame("Frame", "SecretChecklistBeledarHelper", UIParent, "BackdropTemplate")
-    f:SetSize(240, 145)
-    f:SetPoint("CENTER", UIParent, "CENTER", 360, -120)
+    f:SetSize(BH_PANEL_W, BH_PANEL_H)
     f:SetFrameStrata("MEDIUM")
     f:SetClampedToScreen(true)
     f:EnableMouse(true)
     f:SetMovable(true)
     f:RegisterForDrag("LeftButton")
-    f:SetScript("OnDragStart", f.StartMoving)
-    f:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
     f:SetBackdrop({
-        bgFile   = "Interface/Tooltips/UI-Tooltip-Background",
-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-        tile = true, tileSize = 16, edgeSize = 16,
-        insets = { left = 4, right = 4, top = 4, bottom = 4 },
+        bgFile   = "Interface\\Buttons\\WHITE8X8",
+        edgeFile = "Interface\\Buttons\\WHITE8X8",
+        edgeSize = 1,
     })
-    f:SetBackdropColor(0.05, 0.05, 0.05, 0.9)
-    f:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
     f:Hide()
     bh_ui.frame = f
 
-    local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOP", 0, -14)
+    -- Restore where the player last dragged it, as the main window does.
+    local pos = SecretChecklistDB and SecretChecklistDB.beledarPos
+    if pos and pos.point then
+        f:SetPoint(pos.point, UIParent, pos.relPoint or pos.point, pos.x or 0, pos.y or 0)
+    else
+        f:SetPoint("CENTER", UIParent, "CENTER", 360, -120)
+    end
+
+    f:SetScript("OnDragStart", f.StartMoving)
+    f:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        local point, _, relPoint, x, y = self:GetPoint()
+        if point and SecretChecklistDB then
+            SecretChecklistDB.beledarPos = { point = point, relPoint = relPoint, x = x, y = y }
+        end
+    end)
+
+    -- The provenance line used to be a label anchored over the title. It is a
+    -- tooltip now: it matters once, when you wonder where the panel came from.
+    f:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:SetText("Beledar Assignment", 1, 0.82, 0)
+        GameTooltip:AddLine("via SecretChecklist", 0.6, 0.6, 0.6)
+        GameTooltip:AddLine("Drag to move", 0.5, 0.5, 0.5)
+        GameTooltip:Show()
+    end)
+    f:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+    -- ---- Header ----
+    local headerBg = f:CreateTexture(nil, "ARTWORK")
+    headerBg:SetPoint("TOPLEFT", 1, -1)
+    headerBg:SetPoint("TOPRIGHT", -1, -1)
+    headerBg:SetHeight(BH_HEADER_H)
+    bh_ui.headerBg = headerBg
+
+    local headerLine = f:CreateTexture(nil, "OVERLAY")
+    headerLine:SetPoint("TOPLEFT", headerBg, "BOTTOMLEFT", 0, 0)
+    headerLine:SetPoint("TOPRIGHT", headerBg, "BOTTOMRIGHT", 0, 0)
+    headerLine:SetHeight(1)
+    bh_ui.headerLine = headerLine
+
+    local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetPoint("LEFT", headerBg, "LEFT", 8, 0)
     title:SetText("Beledar Assignment")
+    title:SetTextColor(1, 0.82, 0)
 
-    local sourceText = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    sourceText:SetPoint("TOPLEFT", f, "TOPLEFT", 8, -10)
-    sourceText:SetText("via SecretChecklist")
-
-    local measureText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    measureText:SetPoint("TOP", title, "BOTTOM", 0, -10)
-    measureText:SetText("Waiting for measure")
-    bh_ui.measureText = measureText
-
-    local slotText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    slotText:SetPoint("TOP", measureText, "BOTTOM", 0, -6)
-    slotText:SetText("No raid slot")
-    bh_ui.slotText = slotText
-
-    local modifiedText = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    modifiedText:SetPoint("TOP", slotText, "BOTTOM", 0, -2)
-    modifiedText:SetText("|cffffff00(Modified by leader)|r")
-    modifiedText:Hide()
-    bh_ui.modifiedText = modifiedText
-
-    local btn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-    btn:SetSize(180, 40)
-    btn:SetPoint("BOTTOM", 0, 12)
-    btn:SetScript("OnClick", BH_PressEmote)
-    btn:SetText("Waiting...")
-    bh_ui.button = btn
-
-    local closeBtn = CreateFrame("Button", nil, f, "UIPanelCloseButton")
-    closeBtn:SetPoint("TOPRIGHT", 0, 0)
+    -- Flat close button; UIPanelCloseButton is 32px and overhung the corner.
+    local closeBtn = CreateFrame("Button", nil, f)
+    closeBtn:SetSize(18, 18)
+    closeBtn:SetPoint("RIGHT", headerBg, "RIGHT", -5, 0)
+    local closeLbl = closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    closeLbl:SetAllPoints()
+    closeLbl:SetText("×")
+    closeLbl:SetTextColor(0.65, 0.65, 0.65)
+    closeBtn:SetScript("OnEnter", function() closeLbl:SetTextColor(1, 0.35, 0.35) end)
+    closeBtn:SetScript("OnLeave", function() closeLbl:SetTextColor(0.65, 0.65, 0.65) end)
     closeBtn:SetScript("OnClick", function()
         bh_state.closed = true
         f:Hide()
     end)
 
+    -- ---- Measure / slot, one row ----
+    local measureText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    measureText:SetPoint("TOPLEFT", f, "TOPLEFT", 10, -(BH_HEADER_H + 10))
+    measureText:SetJustifyH("LEFT")
+    measureText:SetText("Waiting for measure")
+    bh_ui.measureText = measureText
+
+    local slotText = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    slotText:SetPoint("TOPRIGHT", f, "TOPRIGHT", -10, -(BH_HEADER_H + 11))
+    slotText:SetJustifyH("RIGHT")
+    slotText:SetTextColor(0.65, 0.65, 0.65)
+    slotText:SetText("No raid slot")
+    bh_ui.slotText = slotText
+
+    local modifiedText = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    modifiedText:SetPoint("TOPLEFT", measureText, "BOTTOMLEFT", 0, -4)
+    modifiedText:SetJustifyH("LEFT")
+    modifiedText:SetText("|cffffff00(Modified by leader)|r")
+    modifiedText:Hide()
+    bh_ui.modifiedText = modifiedText
+
+    -- ---- Emote button: the only thing you act on, so it gets the space ----
+    local btn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+    btn:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 10, 10)
+    btn:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -10, 10)
+    btn:SetHeight(34)
+    btn:SetScript("OnClick", BH_PressEmote)
+    btn:SetText("Waiting...")
+    bh_ui.button = btn
+
+    BH_ApplyPopupTheme()
     BH_UpdatePopup()
 end
 
