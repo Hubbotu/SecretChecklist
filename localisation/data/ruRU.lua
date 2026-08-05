@@ -398,7 +398,6 @@ T["Travel to Vash'jir — reach the safe location near the Pearl"] = ""
 T["Dive straight down — swim into the Pearl of the Abyss"] = ""
 T["Collect 17 Mind-Seeker secrets"] = ""
 T["Speak with Anakron — join the Mind-Seekers"] = ""
-T["Get the Gift of Oddsight buff"] = ""
 T["Assemble 40-player raid"] = ""
 T["Perform the Great Song"] = ""
 T["Kill ~100 Kapara or Kapara Pups in Zul'Aman"] = ""
@@ -745,7 +744,6 @@ T["Abyssal Depths @ ~27.8, 73.4 – equip an aquatic mount (Battle Turtle, Ottuk
 T["Descend from @ ~27.8, 74.5 (Abyssal Depths). Make small lateral adjustments to briefly reset fatigue. When the water shifts from grey to dark blue, swim directly into the Pearl. If nothing happens upon reaching it, swap phase via Zidormi in Tirisfal Glades."] = ""
 T["Secrets tagged as Mind-Seeker count toward this requirement. Check your progress in the overview."] = ""
 T["Teleported to an alternate Seat of Knowledge in Pandaria. Pedestals around the room represent secrets you've solved. Speak with Anakron and choose 'I am ready' to earn the Mind-Seeker Feat of Strength and title. If <17 secrets, speak with Jeremy Feasel to set your Hearthstone to this phase."] = ""
-T["Required before anything else: without Gift of Oddsight (spell 1266536) the Divine Flame cannot be targeted at all. The buff comes from Oddsight Focus (item 260533), which is reusable and can be cast on other players — so only one person in the raid needs to own it, and everyone else just needs to be buffed by them."] = ""
 T["Divine Flame of Beledar, Hallowfall @ 33.4, 54.6 – everyone must install the Beledar Orchestra Addon (addons.wago.io/addons/beledarorchestra)"] = ""
 T["Raid leader: /bow once to start; /conductor to open orchestration frame. For each of 25 measures: select measure, send a countdown, all players perform their assigned emotes, raid leader /bow to conclude. Total: 175 harmony notes. Fail conditions: 3 mistakes in same measure OR 15 cumulative discord."] = ""
 T["You do not need to be solo; kill credit is shared in a group but progress is individual. Progress is saved on logout. You must NOT be on a prey hunt when Filo spawns.\\n\\nPhase 1 (~25 kills): 'Your actions have caused an eye once closed to open...'\\nPhase 2 (~50 kills): 'The eye that watches you now glares...'\\nPhase 3 (~75 kills): 'Rage and darkness swell behind the glare which fixates on you...'\\n\\nFilo then spawns, grants the achievement, and hunts you."] = ""
@@ -807,5 +805,6 @@ T["Murder Row dungeon — one fortune per run from Soothsayer Sargle at the entr
 T["Murder Row dungeon — Cravitz Lorent is behind the first boss, to the left. With all 13 Sargle's Fortunes in your bags, he sells the painting for 999g instead of ~10M gold!"] = ""
 T["Discovery: Ponderer's Portal"] = ""
 T["Quest: Someone Like Me\\nFaction: Manaforge Vandals"] = ""
+T["Requires the Gift of Oddsight buff — the Divine Flame cannot be targeted without it. It comes from Oddsight Focus (item 260533), which is reusable and can be cast on other players, so only one person in the raid needs to own it."] = ""
 
 _G.SecretChecklistDataLocale = T
