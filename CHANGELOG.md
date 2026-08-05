@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.3
+
+- **Radiant Singer** now says up front that you need the Gift of Oddsight buff:
+  without it the Divine Flame cannot be targeted at all. The raid-setup step
+  explains where the buff comes from and that only one person in the raid needs
+  to own the item.
+
 ## 2.0.2
 
 - **The Beledar assignment popup now matches your UI theme** instead of using
