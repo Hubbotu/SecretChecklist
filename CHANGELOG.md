@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.2
+
+- **The Beledar assignment popup now matches your UI theme** instead of using
+  a plain tooltip background, and follows ElvUI or EllesmereUI when you use
+  them.
+- Tidier layout: the title no longer overlaps the "via SecretChecklist" label,
+  the close button sits properly in the header, and the emote button is easier
+  to hit.
+- The popup remembers where you drag it.
+
 ## 2.0.1
 
 - **Fixed an error that fired every time you changed target**, introduced in
