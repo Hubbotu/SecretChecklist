@@ -31,6 +31,9 @@ A World of Warcraft addon that helps you track and check your progress on secret
 - **Live Requirement Checks**: Step progress automatically checks renown level, faction reputation, and Mind-Seeker secret count from the game API — shown inline as e.g. `(5 / 8)` when not yet complete
 - **Themes**: Default, ElvUI, and EllesmereUI looks, matching whichever UI you run
 - **Accessible Status Icons**: Collected and missing are marked with a checkmark and a cross, not colour alone
+- **Collection Toasts**: A toast pops up the moment a tracked secret is collected, so you know it registered
+- **Remembers Its Place**: Window position, filters, theme and minimap button all persist across sessions and characters
+- **Beledar Orchestra Helper**: Built-in raid client for the Radiant Singer secret — see [Beledar Orchestra Helper](#beledar-orchestra-helper)
 - **Translatable**: Both the interface and the guide content itself can be translated — see [Translating](#translating)
 - **About Tab**: Always-visible About tab with addon credits and community links
 
@@ -68,11 +71,42 @@ Both `/secrets` and `/secretchecklist` work as aliases:
 - **Quick Actions**: Use "Select All" or "Deselect All" to quickly manage type filters
 - **Progress Counters**: Show your overall collected / total counts regardless of active filters
 
+### Saving Your Preferences
+
+Everything you change is written to SavedVariables and comes back at your next
+login, on every character:
+
+- Filter settings (status and type selections)
+- Window position and the Guides tab layout style
+- Theme choice
+- Minimap button position and visibility
+
 ## Tracked Secrets
 
 Comes pre-configured with **52 secret collectibles** across mounts, pets, toys, achievements, transmog, quests, housing, and mysteries — with more being added regularly.
 
+## Beledar Orchestra Helper
+
+The Radiant Singer secret needs a 40-player raid performing a set sequence of
+emotes at the Divine Flame of Beledar in Hallowfall. SecretChecklist ships a
+small player-side client for that, so **only the raid leader needs the
+[BeledarOrchestra](https://www.curseforge.com/wow/addons/beledarorchestra)
+addon** — everyone else can just have SecretChecklist.
+
+- Target the Divine Flame in Hallowfall and a compact popup appears with your
+  raid slot and the emote you have been assigned for the current measure.
+- The emote button performs it for you; the popup counts down when the leader
+  starts a measure and locks in once you have bowed.
+- It follows your theme (Default, ElvUI or EllesmereUI) and remembers where you
+  drag it.
+- It disables itself automatically if you have BeledarOrchestra installed, so
+  you never get two popups.
+
 ## Translating
+
+The interface ships in 11 languages. Guide content is a newer addition — deDE
+and ruRU files exist but are still empty, so every language currently falls back
+to English there. Help very much wanted.
 
 Two separate files, because they are two different jobs:
 
@@ -103,14 +137,17 @@ Notes for translators:
 - Changing an English string in the data file orphans its translation; re-running
   the extractor shows which strings need another look.
 
-### Saving Your Preferences
-
-Your filter preferences and minimap button position are automatically saved to SavedVariables when you log out or exit WoW:
-- Filter settings (status and type selections)
-- Minimap button position and visibility
-- These settings persist across characters and sessions
+Pull requests with a new or improved locale are very welcome.
 
 ## Version History
+
+The user-facing notes for 2.0 and later live in [CHANGELOG.md](CHANGELOG.md).
+The list below is the full development history.
+
+- **2.0.3**: Radiant Singer now states the Gift of Oddsight requirement up front — the Divine Flame cannot be targeted without the buff
+- **2.0.2**: The Beledar assignment popup follows your theme instead of a plain tooltip background, with a tidier header and a remembered position
+- **2.0.1**: Fixed an error on every target change introduced in 2.0.0, which also tainted execution and could affect other addons
+- **2.0.0**: Large maintenance release. Search box in the Guides tab; whole Overview rows are clickable; checkmark/cross status icons so status is not colour-only; the window remembers its position; the EllesmereUI theme marks collected secrets with the same gold border as the others; guide content (steps, notes, descriptions) is translatable, not just the interface; `/secrets help` and `/secrets validate`. Fixes: a Lua error on every login that silently disabled the Beledar helper; browsing the checklist resetting your Collections journal filters; steps staying red after the reward item was consumed or equipped; achievement tooltips stuck on "Retrieving data"; step notes not reopening after a collapse; oversized waypoint-only steps; the Guides style setting being forgotten; waypoints erroring inside dungeons without TomTom; the About tab copy box showing the wrong link. Internally: on-demand widget creation, a status cache, and a good deal of dead code removed
 - **1.11.0**: Added an EllesmereUI theme built on EllesmereUI 8.6's public skinning API (`EllesmereUI.RegisterSkin`) — the window, tabs, buttons and toasts are painted by EUI itself and track the accent colour, window style and UI font set on your EUI profile, live. Theme colour entries may now be functions so a palette can resolve per read instead of being frozen at load; `ApplyTheme` no longer overwrites the saved theme when it falls back to Default because a host addon has not loaded yet (this previously erased the choice at every login). Also fixed `RefreshAlertTheme` never running — its guard referenced a local declared later in the file, so the name resolved to a nil global and existing toasts were never re-skinned on a theme change
 - **1.10.1**: Fixed the Shu'halo Perspective painting re-firing its "Secret Collected" toast on zone transitions (an early `HOUSING_STORAGE_UPDATED` with `totalNumStored=0` produced a spurious missing→collected swing; a confirmed-collected housing snapshot is now sticky) and made step status housing-aware so the "Buy painting" step reads as done from housing storage rather than bags
 - **1.10.0**: Added Unfazed Diver secret, fix housing ownership detection
@@ -147,11 +184,14 @@ Your filter preferences and minimap button position are automatically saved to S
 - **1.1.0**: Added advanced filtering system (status + type filters), Select All/Deselect All buttons, simplified slash commands, code optimization (11% reduction)
 - **1.0.1**: Added status filter dropdown (All/Collected/Missing)
 - **1.0.0**: Initial public release with minimap button and Collections Journal UI
-- Supports WoW Interface 120000 and 120001 (Midnight)
+
+Supports WoW Interface 120007 and 120100 (Midnight).
 
 ## Credits & References
 
 The transmog 3D model viewer logic (armor display on player character with slot zoom and camera handling) is based on the implementation from **[AppearanceTooltip](https://www.curseforge.com/wow/addons/appearancetooltip)** by [Kemayo](https://www.curseforge.com/members/kemayo/projects). Specifically, the `DressUpModel` + `TryOn` + `Dress()` pattern and `Model_ApplyUICamera` usage were adapted from that addon's source.
+
+The Beledar Orchestra helper speaks the addon message protocol defined by **[BeledarOrchestra](https://www.curseforge.com/wow/addons/beledarorchestra)** by [Samsbase](https://github.com/samsbase), so a raid leader running that addon drives SecretChecklist users automatically. The measure data it ships with comes from the same community effort.
 
 All secrets featured in this addon were discovered by the community over at the **[Secret Finding Discord](https://discord.gg/wowsecrets)** — the home of WoW secret hunters. A huge thanks to everyone there for their incredible detective work.
 
@@ -162,7 +202,10 @@ This addon was created with the assistance of GitHub Copilot and Claude AI. The 
 - **Clean and Performant**: Optimized for minimal overhead and fast execution
 - **Global Namespace Safe**: Free of unnecessary global variables that pollute the WoW environment
 - **Modern API**: Uses current WoW APIs without deprecated functions
+- **Continuously Checked**: Every push runs luacheck, an XML well-formedness check and a packager dry-run in CI
 - **Audited**: Code has been reviewed using Ketho's WoW API extension to ensure quality standards
+
+`/secrets validate` checks the secret data against the live game — schema, cross-references between entries, and whether each waypoint's map actually accepts one. Useful if you keep your own edits to `data/SecretEntries.lua`.
 
 ## Author
 
