@@ -23,8 +23,14 @@ SC.isDevBuild    = IS_DEV_BUILD
 
 -- Convert "major.minor.patch" to a sortable integer for numeric comparison.
 -- e.g. "1.8.4" → 10804
+--
+-- The leading "v" is optional because the version string is whatever the git
+-- tag was, and the tags are not consistent: 1.x was tagged v1.9.11, 2.x is
+-- tagged 2.0.3. Anchoring on %d+ alone made every v-prefixed release parse to
+-- 0, so each of those builds broadcast 0 and read every peer as newer than
+-- itself.
 local function VersionToInt(v)
-    local maj, min, patch = (v or "0"):match("^(%d+)%.?(%d*)%.?(%d*)")
+    local maj, min, patch = (v or "0"):match("^v?(%d+)%.?(%d*)%.?(%d*)")
     return (tonumber(maj)   or 0) * 10000
          + (tonumber(min)   or 0) * 100
          + (tonumber(patch) or 0)
