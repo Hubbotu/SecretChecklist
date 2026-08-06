@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.5
+
+- **The Russian interface is now complete.** Every button, tab, tooltip and
+  setting is translated — thanks again to ZamestoTV.
+
 ## 2.0.4
 
 - **Mounts now use the name your Mount Journal shows.** On a non-English client
