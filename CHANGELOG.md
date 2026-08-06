@@ -11,6 +11,9 @@
 - **The addon's website and bug-report links now work.** Both pointed at a
   repository that no longer exists, so anyone trying to report something from
   the CurseForge or Wago page hit a dead end.
+- **The "a group member has a newer version" notice works again.** It had been
+  misreading its own version number since it was added, so on most releases it
+  simply never fired.
 
 Thanks to ZamestoTV for the Russian translation and for reporting the
 localisation gaps, and to claytonkimber for the dead links.
