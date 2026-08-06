@@ -58,9 +58,6 @@ function SC:BuildAboutPanel(frame, L)
 		end)
 	end
 
-	-- Restart dance if it ever ends (safety net for one-shot animation sequences)
-	terkyModel:SetScript("OnAnimFinished", function(self) StartDance(self) end)
-
 	-- Load model each time the panel is shown.
 	aboutPanel:SetScript("OnShow", function() LoadTerkyModel() end)
 
