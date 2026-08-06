@@ -252,15 +252,36 @@ function SC:GetEntryIcon(entry)
 	return FALLBACK_ICON
 end
 
+-- The journal ID for a mount entry.
+--
+-- Only two entries carry an explicit mountID; the rest identify their mount by
+-- the item that teaches it. GetMountFromItem closes that gap, and it matters
+-- for more than tidiness: without a mountID nothing localised is ever looked
+-- up, so on a non-English client every one of those mounts kept its English
+-- name in the overview while pets, toys and transmog were translated.
+function SC:GetMountID(entry)
+	if type(entry) ~= "table" then
+		return nil
+	end
+	if type(entry.mountID) == "number" then
+		return entry.mountID
+	end
+	if type(entry.itemID) == "number" and C_MountJournal and C_MountJournal.GetMountFromItem then
+		return C_MountJournal.GetMountFromItem(entry.itemID)
+	end
+	return nil
+end
+
 function SC:GetEntryName(entry)
 	if type(entry) ~= "table" then
 		return "Unknown"
 	end
 
 	-- Try to get localized name from game APIs
-	if entry.kind == "mount" and type(entry.mountID) == "number" then
-		if C_MountJournal and C_MountJournal.GetMountInfoByID then
-			local name = C_MountJournal.GetMountInfoByID(entry.mountID)
+	if entry.kind == "mount" then
+		local mountID = SC:GetMountID(entry)
+		if mountID and C_MountJournal and C_MountJournal.GetMountInfoByID then
+			local name = C_MountJournal.GetMountInfoByID(mountID)
 			if name and name ~= "" then
 				return name
 			end
@@ -420,19 +441,9 @@ do
 			return nil, "MountJournal API unavailable (try after fully logged in)."
 		end
 
-		-- Check if mount specified by mountID (e.g., Fathom Dweller)
-		if type(entry.mountID) == "number" then
-			local isCollected = select(11, C_MountJournal.GetMountInfoByID(entry.mountID))
-			if isCollected == nil then
-				return nil, "Mount data has not finished loading yet."
-			end
-			return isCollected == true, "mount"
-		end
-
-		local mountID
-		if type(entry.itemID) == "number" and C_MountJournal.GetMountFromItem then
-			mountID = C_MountJournal.GetMountFromItem(entry.itemID)
-		end
+		-- Either an explicit mountID (e.g. Fathom Dweller) or the journal ID
+		-- resolved from the item that teaches the mount.
+		local mountID = SC:GetMountID(entry)
 		if type(mountID) == "number" then
 			local isCollected = select(11, C_MountJournal.GetMountInfoByID(mountID))
 			if isCollected == nil then
