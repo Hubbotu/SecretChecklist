@@ -100,38 +100,38 @@ L["TOOLTIP_RIGHT_CLICK_OPTIONS"] = "ПКМ: открыть настройки"
 -- ---------------------------------------------------------------------------
 
 -- Tabs
--- L["TAB_OVERVIEW"]              = ""
--- L["TAB_GUIDES"]                = ""
+L["TAB_OVERVIEW"]         = "Обзор"
+L["TAB_GUIDES"]           = "Руководства"
 
 -- Guides panel
--- L["GUIDES_TAB_INFO"]           = ""
--- L["GUIDES_TAB_MODEL"]          = ""
--- L["GUIDES_GUIDE_BUTTON"]       = ""
--- L["GUIDES_CLICK_COPY"]         = ""
--- L["GUIDES_NO_GUIDE_LINK"]      = ""
--- L["GUIDES_CLICK_VIEW"]         = ""
--- L["GUIDES_REQUIRES"]           = ""
--- L["GUIDES_REQUIRED_FOR"]       = ""
--- L["GUIDES_PART_OF"]            = ""   -- "Part of: %s"
--- L["GUIDES_PROGRESS"]           = ""   -- "Progress  %d / %d  steps"
--- L["GUIDES_MINDSEEKER_REQ"]     = ""   -- "(%d / %d secrets)"
--- L["GUIDES_RANK_REQ"]           = ""   -- "(Rank %d / %s)"
--- L["GUIDES_SET_WAYPOINT"]       = ""
--- L["GUIDES_SET_ALL_WAYPOINTS"]  = ""
--- L["GUIDES_WAYPOINT_UNSUPPORTED"] = ""
--- L["GUIDES_WAYPOINT_PARTIAL"]   = ""   -- "%d waypoints"
+L["GUIDES_TAB_INFO"]        = "Инфо"
+L["GUIDES_TAB_MODEL"]       = "Модель"
+L["GUIDES_GUIDE_BUTTON"]    = "Руководство"
+L["GUIDES_CLICK_COPY"]      = "Нажмите, чтобы скопировать ссылку"
+L["GUIDES_NO_GUIDE_LINK"]   = "Ссылки на руководство пока нет"
+L["GUIDES_CLICK_VIEW"]      = "Нажмите для просмотра"
+L["GUIDES_REQUIRES"]        = "Требуется:"
+L["GUIDES_REQUIRED_FOR"]    = "Требуется для:"
+L["GUIDES_PART_OF"]         = "Часть от: %s"
+L["GUIDES_PROGRESS"]        = "Прогресс: %d / %d шагов"
+L["GUIDES_MINDSEEKER_REQ"]  = "(%d / %d секретов)"
+L["GUIDES_RANK_REQ"]        = "(Ранг %d / %s)"
+L["GUIDES_SET_WAYPOINT"]    = "Установить точку"
+L["GUIDES_SET_ALL_WAYPOINTS"] = "Установить все точки"
+L["GUIDES_WAYPOINT_UNSUPPORTED"] = "Стандартная система путевых точек Blizzard не поддерживает эту локацию. Установите TomTom для добавления точек здесь."
+L["GUIDES_WAYPOINT_PARTIAL"] = "Установлена первая из %d путевых точек. Установите TomTom, чтобы разместить все сразу."
 
 -- Copy dialog
--- L["COPY_HINT"]                 = ""
+L["COPY_HINT"]            = "Ctrl+C для копирования  ·  Esc для закрытия"
 
 -- Collection toast
--- L["ALERT_TITLE"]               = ""
--- L["ALERT_CLICK_VIEW"]          = ""
+L["ALERT_TITLE"]          = "Секрет получен!"
+L["ALERT_CLICK_VIEW"]     = "Нажмите для просмотра руководства"
 
 -- Settings
--- L["SETTINGS_ADDON_COMPARTMENT"]      = ""
--- L["SETTINGS_ADDON_COMPARTMENT_DESC"] = ""
--- L["SETTINGS_ALERTS"]                 = ""
--- L["SETTINGS_ALERTS_DESC"]            = ""
+L["SETTINGS_ADDON_COMPARTMENT"] = "Кнопка в меню аддонов"
+L["SETTINGS_ADDON_COMPARTMENT_DESC"] = "Показать или скрыть кнопку SecretChecklist в общем меню аддонов у мини-карты."
+L["SETTINGS_ALERTS"] = "Оповещения о получении"
+L["SETTINGS_ALERTS_DESC"] = "Показывать всплывающее уведомление, когда отслеживаемый секрет был впервые получен."
 
 _G.SecretChecklistLocale = L
