@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.4
+
+- **Mounts now use the name your Mount Journal shows.** On a non-English client
+  they were the only category left in English — pets, toys and appearances were
+  already translated. A few English names change as a result (Blanchy's Reins is
+  now Sinrunner Blanchy), and the Overview sorts by the new names.
+- **The theme and Guides tab style settings are translatable**, including the
+  individual options. They were English on every client before.
+
+Thanks to ZamestoTV for reporting all of this and for the Russian translation.
+
 ## 2.0.3
 
 - **Radiant Singer** now says up front that you need the Gift of Oddsight buff:
