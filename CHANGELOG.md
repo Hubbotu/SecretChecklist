@@ -8,8 +8,12 @@
   now Sinrunner Blanchy), and the Overview sorts by the new names.
 - **The theme and Guides tab style settings are translatable**, including the
   individual options. They were English on every client before.
+- **The addon's website and bug-report links now work.** Both pointed at a
+  repository that no longer exists, so anyone trying to report something from
+  the CurseForge or Wago page hit a dead end.
 
-Thanks to ZamestoTV for reporting all of this and for the Russian translation.
+Thanks to ZamestoTV for the Russian translation and for reporting the
+localisation gaps, and to claytonkimber for the dead links.
 
 ## 2.0.3
 
