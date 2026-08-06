@@ -91,14 +91,6 @@ L["SETTINGS_THEME_DESC"] = "Выберите визуальную тему дл�
 -- Minimap button
 L["TOOLTIP_RIGHT_CLICK_OPTIONS"] = "ПКМ: открыть настройки"
 
--- ---------------------------------------------------------------------------
--- Not yet translated. Uncomment a line and fill it in; anything left commented
--- falls back to English. Do NOT leave a key assigned to an empty string.
---
--- The %d / %s placeholders may be reordered to suit Russian word order, but
--- every placeholder in the English must appear exactly once in the translation.
--- ---------------------------------------------------------------------------
-
 -- Tabs
 L["TAB_OVERVIEW"]         = "Обзор"
 L["TAB_GUIDES"]           = "Руководства"
@@ -133,12 +125,6 @@ L["SETTINGS_ADDON_COMPARTMENT"] = "Кнопка в меню аддонов"
 L["SETTINGS_ADDON_COMPARTMENT_DESC"] = "Показать или скрыть кнопку SecretChecklist в общем меню аддонов у мини-карты."
 L["SETTINGS_ALERTS"] = "Оповещения о получении"
 L["SETTINGS_ALERTS_DESC"] = "Показывать всплывающее уведомление, когда отслеживаемый секрет был впервые получен."
-
--- ---------------------------------------------------------------------------
--- Not yet translated. Uncomment a line and fill it in; anything left commented
--- falls back to the English shown after it. Do NOT leave a key assigned to an
--- empty string.
--- ---------------------------------------------------------------------------
 
 -- Theme dropdown options. "ElvUI" and "EllesmereUI" are addon names and are
 -- deliberately left untranslated.
