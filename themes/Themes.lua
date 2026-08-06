@@ -140,6 +140,10 @@ end
 SC:RegisterTheme("Default", {
 	Name        = "Default",
 	Description = "The classic SecretChecklist dark-amber look.",
+	-- Locale keys for the two strings above; the options dropdown prefers them
+	-- and falls back to the English when a locale has not filled them in.
+	NameKey     = "THEME_DEFAULT",
+	DescKey     = "THEME_DEFAULT_DESC",
 	Available   = true,
 	colors = {
 		insetBg = {0.12, 0.10, 0.08, 0.98},
@@ -195,6 +199,8 @@ end
 SC:RegisterTheme("ElvUI", {
 	Name        = "ElvUI",
 	Description = "A flat dark theme matching ElvUI's aesthetic. Requires ElvUI.",
+	-- No NameKey: "ElvUI" is the addon's own name and stays as it is.
+	DescKey     = "THEME_ELVUI_DESC",
 	-- Resolved once, at file load, so ElvUI must already be loaded by then --
 	-- that is what the ## OptionalDeps line in the .toc guarantees.
 	Available   = (ElvUI ~= nil),

@@ -885,6 +885,15 @@ local function CreateOptionsPanel()
 			GetTheme,
 			SetTheme
 		)
+		-- A theme names itself in English and may additionally name locale keys
+		-- for its label and description. Themes registered by other addons carry
+		-- neither, so they fall through to their own English text unchanged.
+		local function ThemeText(theme)
+			local name = (theme.NameKey and L[theme.NameKey]) or theme.Name
+			local desc = (theme.DescKey and L[theme.DescKey]) or theme.Description
+			return name, desc
+		end
+
 		local function GetThemeOptions()
 			local container = Settings.CreateControlTextContainer()
 			-- Add Default first, then any other available themes
@@ -894,13 +903,13 @@ local function CreateOptionsPanel()
 				isOrdered[key] = true
 				local theme = SC.themes and SC.themes[key]
 				if theme and theme.Available then
-					container:Add(key, theme.Name, theme.Description)
+					container:Add(key, ThemeText(theme))
 				end
 			end
 			-- Add any runtime-registered themes not in the hardcoded list above
 			for key, theme in pairs(SC.themes or {}) do
 				if theme.Available and not isOrdered[key] then
-					container:Add(key, theme.Name, theme.Description)
+					container:Add(key, ThemeText(theme))
 				end
 			end
 			return container:GetData()
@@ -917,19 +926,23 @@ local function CreateOptionsPanel()
 			category,
 			"SECRETCHECKLIST_TAB_STYLE",
 			Settings.VarType.String,
-			"Guides tab style",
+			L["SETTINGS_GUIDES_STYLE"] or "Guides tab style",
 			"sidetabs",
 			GetTabStyle,
 			SetTabStyle
 		)
 		local function GetTabStyleOptions()
 			local container = Settings.CreateControlTextContainer()
-			container:Add("sidetabs", "Default", "SpellBook-style side tabs on the right edge of the detail pane.")
-			container:Add("horizontal", "Modern", "Classic horizontal Info / Model tab bar inside the detail pane.")
+			container:Add("sidetabs",
+				L["GUIDES_STYLE_SIDETABS"] or "Default",
+				L["GUIDES_STYLE_SIDETABS_DESC"] or "SpellBook-style side tabs on the right edge of the detail pane.")
+			container:Add("horizontal",
+				L["GUIDES_STYLE_HORIZONTAL"] or "Modern",
+				L["GUIDES_STYLE_HORIZONTAL_DESC"] or "Classic horizontal Info / Model tab bar inside the detail pane.")
 			return container:GetData()
 		end
 		Settings.CreateDropdown(category, tabStyleSetting, GetTabStyleOptions,
-			"Choose how the Info and Model tabs are shown in the Guides panel.")
+			L["SETTINGS_GUIDES_STYLE_DESC"] or "Choose how the Info and Model tabs are shown in the Guides panel.")
 	end
 end
 

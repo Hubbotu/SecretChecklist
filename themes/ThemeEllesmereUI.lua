@@ -194,6 +194,8 @@ end
 SC:RegisterTheme(THEME_KEY, {
 	Name        = "EllesmereUI",
 	Description = "Matches your EllesmereUI profile — window style, accent colour and UI font. Requires EllesmereUI.",
+	-- No NameKey: "EllesmereUI" is the addon's own name and stays as it is.
+	DescKey     = "THEME_ELLESMEREUI_DESC",
 	-- Flipped to true only when EllesmereUI actually dispatches our skin
 	-- callback. Merely having EllesmereUI loaded is not enough: the API is a
 	-- silent no-op when its skin module is off, and users can disable
