@@ -142,17 +142,17 @@ L["SETTINGS_ALERTS_DESC"] = "Показывать всплывающее уве�
 
 -- Theme dropdown options. "ElvUI" and "EllesmereUI" are addon names and are
 -- deliberately left untranslated.
--- L["THEME_DEFAULT"]          = ""   -- "Default"
--- L["THEME_DEFAULT_DESC"]     = ""   -- "The classic SecretChecklist dark-amber look."
--- L["THEME_ELVUI_DESC"]       = ""   -- "A flat dark theme matching ElvUI's aesthetic. Requires ElvUI."
--- L["THEME_ELLESMEREUI_DESC"] = ""   -- "Matches your EllesmereUI profile — window style, accent colour and UI font. Requires EllesmereUI."
+L["THEME_DEFAULT"]              = "По умолчанию"
+L["THEME_DEFAULT_DESC"]         = "Классический темно-янтарный вид SecretChecklist."
+L["THEME_ELVUI_DESC"]           = "Плоская темная тема, соответствующая эстетике ElvUI. Требуется ElvUI."
+L["THEME_ELLESMEREUI_DESC"]     = "Соответствует вашему профилю EllesmereUI - стилю окон, акцентному цвету и шрифту интерфейса. Требуется EllesmereUI."
 
--- Guides tab style setting
--- L["SETTINGS_GUIDES_STYLE"]        = ""   -- "Guides tab style"
--- L["SETTINGS_GUIDES_STYLE_DESC"]   = ""   -- "Choose how the Info and Model tabs are shown in the Guides panel."
--- L["GUIDES_STYLE_SIDETABS"]        = ""   -- "Default"
--- L["GUIDES_STYLE_SIDETABS_DESC"]   = ""   -- "SpellBook-style side tabs on the right edge of the detail pane."
--- L["GUIDES_STYLE_HORIZONTAL"]      = ""   -- "Modern"
--- L["GUIDES_STYLE_HORIZONTAL_DESC"] = ""   -- "Classic horizontal Info / Model tab bar inside the detail pane."
+-- Guides tab style
+L["SETTINGS_GUIDES_STYLE"]      = "Стиль вкладок руководств"
+L["SETTINGS_GUIDES_STYLE_DESC"] = "Выберите, как отображаются вкладки «Инфо» и «Модель» на панели руководств."
+L["GUIDES_STYLE_SIDETABS"]      = "По умолчанию"
+L["GUIDES_STYLE_SIDETABS_DESC"] = "Боковые вкладки в стиле книги заклинаний на правом краю панели подробностей."
+L["GUIDES_STYLE_HORIZONTAL"]      = "Современный"
+L["GUIDES_STYLE_HORIZONTAL_DESC"] = "Классическая горизонтальная панель вкладок «Инфо / Модель» внутри панели подробностей."
 
 _G.SecretChecklistLocale = L
