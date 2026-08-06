@@ -134,4 +134,25 @@ L["SETTINGS_ADDON_COMPARTMENT_DESC"] = "Показать или скрыть к�
 L["SETTINGS_ALERTS"] = "Оповещения о получении"
 L["SETTINGS_ALERTS_DESC"] = "Показывать всплывающее уведомление, когда отслеживаемый секрет был впервые получен."
 
+-- ---------------------------------------------------------------------------
+-- Not yet translated. Uncomment a line and fill it in; anything left commented
+-- falls back to the English shown after it. Do NOT leave a key assigned to an
+-- empty string.
+-- ---------------------------------------------------------------------------
+
+-- Theme dropdown options. "ElvUI" and "EllesmereUI" are addon names and are
+-- deliberately left untranslated.
+-- L["THEME_DEFAULT"]          = ""   -- "Default"
+-- L["THEME_DEFAULT_DESC"]     = ""   -- "The classic SecretChecklist dark-amber look."
+-- L["THEME_ELVUI_DESC"]       = ""   -- "A flat dark theme matching ElvUI's aesthetic. Requires ElvUI."
+-- L["THEME_ELLESMEREUI_DESC"] = ""   -- "Matches your EllesmereUI profile — window style, accent colour and UI font. Requires EllesmereUI."
+
+-- Guides tab style setting
+-- L["SETTINGS_GUIDES_STYLE"]        = ""   -- "Guides tab style"
+-- L["SETTINGS_GUIDES_STYLE_DESC"]   = ""   -- "Choose how the Info and Model tabs are shown in the Guides panel."
+-- L["GUIDES_STYLE_SIDETABS"]        = ""   -- "Default"
+-- L["GUIDES_STYLE_SIDETABS_DESC"]   = ""   -- "SpellBook-style side tabs on the right edge of the detail pane."
+-- L["GUIDES_STYLE_HORIZONTAL"]      = ""   -- "Modern"
+-- L["GUIDES_STYLE_HORIZONTAL_DESC"] = ""   -- "Classic horizontal Info / Model tab bar inside the detail pane."
+
 _G.SecretChecklistLocale = L
