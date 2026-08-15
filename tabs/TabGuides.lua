@@ -1467,7 +1467,24 @@ function SC:BuildGuidesPanel(frame, L)
 					end
 					if sub.itemID then
 						local _, itemLink = C_Item.GetItemInfo(sub.itemID)
-						local displayText = itemLink or SC:T(sub.label)
+						-- The authored label wins over the item link.
+						--
+						-- This used to be `itemLink or label`, which made the text
+						-- depend on whether the client had that item cached: the
+						-- same substep read "[Glittering Phoenix Ember]" in one
+						-- session and "Loot Glittering Phoenix Ember (x1)" in the
+						-- next. The label is the better of the two anyway -- it
+						-- carries the verb and the count, and it goes through SC:T
+						-- so it translates, where a link is only ever a name.
+						--
+						-- Nothing is lost by not showing the link inline: sr.itemLink
+						-- still drives the hover tooltip.
+						local displayText = SC:T(sub.label) or itemLink
+						-- The label does not need the item, but the hover tooltip
+						-- does; request it so the tooltip is not silently absent.
+						if not itemLink and C_Item.RequestLoadItemDataByID then
+							C_Item.RequestLoadItemDataByID(sub.itemID)
+						end
 						if sub.count and sub.count > 1 then
 							local have = C_Item.GetItemCount(sub.itemID, true, nil, nil, true)
 							displayText = displayText .. "  (" .. math_min(have, sub.count) .. " / " .. sub.count .. ")"
@@ -1532,6 +1549,12 @@ function SC:BuildGuidesPanel(frame, L)
 					itemBtn:SetPoint("RIGHT", np, "RIGHT", -6, 0)
 					itemBtn:Show()
 				else
+					-- Not cached yet. Ask for it; the handler below redraws when
+					-- it lands, so the row stops being a coin flip on whether the
+					-- player happened to have seen the item this session.
+					if C_Item.RequestLoadItemDataByID then
+						C_Item.RequestLoadItemDataByID(displayItemID)
+					end
 					itemBtn.itemLink = nil
 					itemBtn:Hide()
 				end
@@ -2026,4 +2049,34 @@ function SC:BuildGuidesPanel(frame, L)
 	-- set a neutral starting state here (sidetabs is the default). persist=false:
 	-- writing the default here would overwrite the saved value before login reads it.
 	ApplyGuideStyle("sidetabs", false)
+
+	-- Redraw the open guide when an item we asked for finishes loading.
+	--
+	-- Item data is cached lazily, so GetItemInfo returns nil for anything the
+	-- client has not seen. The detail pane requests what it needs above; this
+	-- turns the answer into a redraw, which is what stops a step's item row from
+	-- being present in one session and missing in the next.
+	--
+	-- Coalesced through a timer: a single guide can request several items and
+	-- each one answers separately, but one redraw covers them all.
+	do
+		local itemLoadFrame   = CreateFrame("Frame")
+		local redrawScheduled = false
+		itemLoadFrame:RegisterEvent("ITEM_DATA_LOAD_RESULT")
+		itemLoadFrame:SetScript("OnEvent", function(_, _, _, success)
+			-- Only on success. The event also reports failures, and redrawing on
+			-- one would re-request the same item and fire it again -- a loop for
+			-- any id the client cannot resolve.
+			if success == false then return end
+			if redrawScheduled then return end
+			if not (guidesPanel:IsShown() and guides_selected) then return end
+			redrawScheduled = true
+			C_Timer.After(0.1, function()
+				redrawScheduled = false
+				if guidesPanel:IsShown() and guides_selected then
+					Guides_ShowDetail(guides_selected)
+				end
+			end)
+		end)
+	end
 end -- SC:BuildGuidesPanel
