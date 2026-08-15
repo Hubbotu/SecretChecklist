@@ -167,10 +167,7 @@ function SC:BuildOverviewPanel(frame, L)
 					success = TryTooltip("SetItemByID", entry.itemID)
 				end
 				if success and C_MountJournal then
-					local mountID = entry.mountID
-					if not mountID and entry.itemID and C_MountJournal.GetMountFromItem then
-						mountID = C_MountJournal.GetMountFromItem(entry.itemID)
-					end
+					local mountID = SC:GetMountID(entry)
 					if mountID then
 						local _, _, _, _, _, _, _, _, _, _, isCollected = C_MountJournal.GetMountInfoByID(mountID)
 						if C_MountJournal.GetMountInfoExtraByID then

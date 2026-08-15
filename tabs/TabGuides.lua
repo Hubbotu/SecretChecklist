@@ -1182,10 +1182,7 @@ function SC:BuildGuidesPanel(frame, L)
 	local modelSet = false
 
 	if entry.kind == "mount" then
-		local mountID = entry.mountID
-		if not mountID and entry.itemID and C_MountJournal and C_MountJournal.GetMountFromItem then
-			mountID = C_MountJournal.GetMountFromItem(entry.itemID)
-		end
+		local mountID = SC:GetMountID(entry)
 		if mountID and C_MountJournal and C_MountJournal.GetMountInfoExtraByID then
 			local creatureDisplayID = C_MountJournal.GetMountInfoExtraByID(mountID)
 			if creatureDisplayID and creatureDisplayID > 0 then
@@ -1620,10 +1617,7 @@ function SC:BuildGuidesPanel(frame, L)
 
 		local sourceText, descText = "", ""
 		if entry.kind == "mount" then
-			local mountID = entry.mountID
-			if not mountID and entry.itemID and C_MountJournal and C_MountJournal.GetMountFromItem then
-				mountID = C_MountJournal.GetMountFromItem(entry.itemID)
-			end
+			local mountID = SC:GetMountID(entry)
 			if mountID and C_MountJournal and C_MountJournal.GetMountInfoExtraByID then
 				local _, desc, src = C_MountJournal.GetMountInfoExtraByID(mountID)
 				sourceText         = src or ""
