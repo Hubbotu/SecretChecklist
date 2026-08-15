@@ -1494,17 +1494,21 @@ function SC:BuildGuidesPanel(frame, L)
 						-- Ready keeps its gold. That one means "you can do this
 						-- now", which is worth more than knowing the item is rare,
 						-- and it is the only row of its kind on screen.
+						-- Full quality colour, undimmed, on everything except a
+						-- ready row.
+						--
+						-- Done rows were dimmed at first, carried over from when
+						-- grey was the only signal that a substep was finished. It
+						-- is not any more: the green check beside the row says so,
+						-- and dimming only fought with the colour it was drawn on
+						-- top of. Quality colours are muted to begin with, so there
+						-- was little headroom to take away.
+						--
+						-- Ready still overrides to gold. "You can do this now" is
+						-- worth more than rarity and there is only ever one.
 						if quality and not srReady and ITEM_QUALITY_COLORS then
 							local qc = ITEM_QUALITY_COLORS[quality]
-							if qc then
-								-- 0.7, not 0.5. Quality colours are already muted
-								-- -- common is grey, uncommon a soft green -- so
-								-- halving them lands somewhere barely legible. This
-								-- reads as done without making the row hard to
-								-- read; the green check carries the state anyway.
-								local dim = srDone and 0.7 or 1
-								sr.lbl:SetTextColor(qc.r * dim, qc.g * dim, qc.b * dim)
-							end
+							if qc then sr.lbl:SetTextColor(qc.r, qc.g, qc.b) end
 						end
 						-- The authored label wins over the item link.
 						--
