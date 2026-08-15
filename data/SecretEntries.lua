@@ -360,6 +360,13 @@ SC.entries = {
 	    { label = "Gurgl and the Bandit — defeat Iris Greedsway & claim Gurgl", questID = 64237, note = "Eye of Azshara — find Violetsail Pirates leader Iris Greedsway and beat her in a pet battle. Return Gurgl to Breanni; she lets you keep him!" },
 	  },
 	},
+	{ name = "J'imothy",                                     kind = "pet",   speciesID = 5164, guideURL = "https://www.wowhead.com/npc=273775/jimothy",
+	  source = "Confirmed by Blizzard as a secret pet in 12.1. Nobody has published how to obtain it yet.",
+	  steps = {
+	    { label = "Not solved yet — nothing to do",
+	      note = "Blizzard announced J'imothy the raccoon as a secret pet in the Curse of Ula'tek content update, and the pet has a journal entry on live, so it is obtainable — but nobody has published how. The building shown in Blizzard's teaser resembles the architecture in Zul'Aman, one of Midnight's levelling zones, which is the community's current best guess for where to look. Follow the Secret Finding Discord for progress." },
+	  },
+	},
 	{ name = "Jenafur",                                      kind = "pet",   mindSeeker = true, speciesID = 2795, guideURL = "https://www.wowhead.com/guide/jenafur-secret-cat-battle-pet",
 	  steps = {
 	    { label = "Speak with Amara Lunastar", questID = 58076, note = "Ashenvale @ 17.4, 49.3 — speak with Amara to start the quest chain and unlock the Karazhan changes.",                                                                               waypoint = { mapID = 63,  x = 0.174, y = 0.493 } },
@@ -686,16 +693,6 @@ SC.entries = {
 	    { label = "Orb 10 – Oddsight Focus", itemID = 260533, count = 1, note = "Waking Shores Hissing Grotto @ 19.4, 36.7 – die and loot Secret Fish as ghost for Bubblefilled Flounder; feed to Hek the Hungry Hornswog; place Duck Egg at Valdrakken duck family @ 40.0, 78.0; find stealthed To'no at Forbidden Reach", waypoint = { mapID = 2022, x = 0.1940, y = 0.3670 } },
 	    { label = "Orb 11 – Radiant Singer", questID = 93764, note = "See Radiant Singer entry – Divine Flame of Beledar, Hallowfall @ 33.4, 54.6", waypoint = { mapID = 2215, x = 0.3340, y = 0.5460 } },
 	    { label = "Orb 12 – Footlocker", questID = 93765, note = "See Ensemble: Fashion of the Fanatic Felcyclist entry – Dusk Lily escort (Suramar -> Golk the Rumble, Azsuna) for Spare Key; then open Hidden Footlocker near 12th pillar in Karazhan Catacombs with Gift of Oddsight + Starry-Eyed Goggles", waypoint = { mapID = 46, x = 0.6500, y = 0.5000 } },
-	  },
-	},
-	-- Stays a mystery rather than a pet: the reward is identified but the method
-	-- is not, which is exactly what the category is for. The speciesID lets it
-	-- report collected anyway -- see checkers.mystery.
-	{ name = "J'imothy",                          kind = "mystery", speciesID = 5164, guideURL = "https://www.wowhead.com/npc=273775/jimothy",
-	  source = "Confirmed by Blizzard as a secret pet in 12.1. Not solved yet — no obtain method is known.",
-	  steps = {
-	    { label = "Not solved yet — nothing to do",
-	      note = "Blizzard announced J'imothy the raccoon as a secret pet in the Curse of Ula'tek content update, and the pet now has a journal entry on live, so it is obtainable — but nobody has published how. The building shown in Blizzard's teaser resembles the architecture in Zul'Aman, one of Midnight's levelling zones, which is the community's current best guess for where to look. Follow the Secret Finding Discord for progress." },
 	  },
 	},
 
