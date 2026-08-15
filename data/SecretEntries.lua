@@ -389,18 +389,16 @@ SC.entries = {
 	    { label = "Complete Tale of the Phoenix — claim Phoenix Wishwing", questID = 72798, note = "Waking Shores @ 16.2, 62.6 — bring 1× Phoenix Ash Talisman + 15× Smoldering Phoenix Ash + 20× Ash Feather to Tarjin the Blind and complete the quest.", waypoint = { mapID = 2022, x = 0.162, y = 0.626 } },
 	  },
 	},
-	-- TODO: speciesID unknown. The pet has no journal entry on the PTR (normal for
-	-- a secret), and no public source lists it. Until it is filled in, checkers.pet
-	-- returns "Pet missing speciesID" and the entry shows as unknown rather than
-	-- collected. Fill it from a character that owns the pet.
-	{ name = "Slitherfang",                                  kind = "pet",   itemID = 279197, guideURL = "https://www.wowhead.com/news/hidden-slitherfang-pet-found-by-wow-secret-finders-382439",
+	-- speciesID read off a live client with the pet summoned; no public source
+	-- lists it, because a secret pet has no journal entry until it is collected.
+	{ name = "Slitherfang",                                  kind = "pet",   speciesID = 5129, itemID = 279197, guideURL = "https://www.wowhead.com/news/hidden-slitherfang-pet-found-by-wow-secret-finders-382439",
 	  source = "Needs a full group of five in Mythic Altar of Fangs — the ritual cannot be done solo or on a lower difficulty.",
 	  steps = {
 	    { label = "Enter Altar of Fangs on Mythic difficulty", note = "The ritual objects only appear on Mythic. All five players take part: one carries the reagent, the other four each carry a charm." },
 	    { label = "After the first boss — one player takes the Ritual Reagent, the other four take a Reversal Charm", note = "The interactable objects sit around the first boss arena. There is one Ritual Reagent and four Reversal Charms; pick them all up before moving on." },
 	    { label = "After the second boss — clear the trash around the Ascendant Serpent, but do NOT touch the totems", note = "An Ascendant Serpent spawns with four totems around it. Touching a totem breaks the ritual." },
 	    { label = "Position one charm holder at each totem, and the reagent holder next to the serpent", note = "An extra action button appears once everyone is in place." },
-	    { label = "Use the extra action button — reagent first, then the four charms — then click Slitherfang", itemID = 279197, note = "Order matters: the Ritual Reagent player activates first, then the four Reversal Charm players. The Ascendant Serpent transforms into Slitherfang; click it to collect the pet." },
+	    { label = "Use the extra action button — reagent first, then the four charms — then click Slitherfang", itemID = 279197, speciesID = 5129, note = "Order matters: the Ritual Reagent player activates first, then the four Reversal Charm players. The Ascendant Serpent transforms into Slitherfang; click it to collect the pet." },
 	  },
 	},
 	{ name = "Tobias' Leash",                                kind = "pet",   mindSeeker = true, speciesID = 4263, itemID = 208151,  requires = {"Tricked-Out Thinking Cap", "Torch of Pyrreth"}, guideURL = "https://warcraft-secrets.com/guides/secrets-of-azeroth-world-event",
