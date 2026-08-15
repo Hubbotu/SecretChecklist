@@ -1854,6 +1854,21 @@ function SC:BuildGuidesPanel(frame, L)
 		scrollBar:SetValue(curScroll)
 		scrollBar:SetShown(maxScroll > 0)
 
+		-- Size the thumb to the share of the list that is on screen. This is a
+		-- bare Slider rather than one of Blizzard's scrollbar templates, so
+		-- nothing does it for us: the thumb kept the fixed 20px it was given at
+		-- creation and looked identical whether it was scrolling every entry or
+		-- three search results. Searching narrows the list, so that is exactly
+		-- when a fixed thumb misleads most.
+		local thumb = scrollBar:GetThumbTexture()
+		if thumb and maxScroll > 0 then
+			local trackH = scrollBar:GetHeight() or 0
+			if trackH > 0 and contentH > 0 then
+				local proportional = trackH * (visibleH / contentH)
+				thumb:SetHeight(math_max(20, math_min(trackH, proportional)))
+			end
+		end
+
 		for i = 1, math_max(total, #guides_rowButtons) do
 			local entry = guides_entries[i]
 			local row   = Guides_GetOrCreateRow(i)
