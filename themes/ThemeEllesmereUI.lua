@@ -104,6 +104,7 @@ local function ApplySkin()
 	if frame.ProgressBar then
 		S.Font(frame.ProgressBar.TotalText)
 		S.Font(frame.ProgressBar.MindSeekerText)
+		if frame.ProgressBar.Separator then S.Font(frame.ProgressBar.Separator) end
 	end
 	local paging = frame.PagingFrame
 	if paging then
