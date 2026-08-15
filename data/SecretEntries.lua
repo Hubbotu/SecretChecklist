@@ -361,10 +361,10 @@ SC.entries = {
 	  },
 	},
 	{ name = "J'imothy",                                     kind = "pet",   speciesID = 5164, guideURL = "https://www.wowhead.com/npc=273775/jimothy",
-	  source = "Confirmed by Blizzard as a secret pet in 12.1. Nobody has published how to obtain it yet.",
+	  source = "Teased by Blizzard as a secret pet in 12.1. Unsolved — nobody has published how to obtain it.",
 	  steps = {
-	    { label = "Not solved yet — nothing to do",
-	      note = "Blizzard announced J'imothy the raccoon as a secret pet in the Curse of Ula'tek content update, and the pet has a journal entry on live, so it is obtainable — but nobody has published how. The building shown in Blizzard's teaser resembles the architecture in Zul'Aman, one of Midnight's levelling zones, which is the community's current best guess for where to look. Follow the Secret Finding Discord for progress." },
+	    { label = "Unsolved — nothing to do yet",
+	      note = "Blizzard teased J'imothy in an interview with Paul Kubit and Rachel Vought, and the pet has a journal entry on live, so it is obtainable — but the method is still being worked out. Its own journal text is the strongest lead there is: Silvermoon, and magical garbage. Two datamined spells look related, Drain Barrier (1313803) and Barrier Integrity (1313802). Follow the Secret Finding Discord for progress." },
 	  },
 	},
 	{ name = "Jenafur",                                      kind = "pet",   mindSeeker = true, speciesID = 2795, guideURL = "https://www.wowhead.com/guide/jenafur-secret-cat-battle-pet",
