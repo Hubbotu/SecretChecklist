@@ -688,11 +688,11 @@ SC.entries = {
 	    { label = "Orb 12 – Footlocker", questID = 93765, note = "See Ensemble: Fashion of the Fanatic Felcyclist entry – Dusk Lily escort (Suramar -> Golk the Rumble, Azsuna) for Spare Key; then open Hidden Footlocker near 12th pillar in Karazhan Catacombs with Gift of Oddsight + Starry-Eyed Goggles", waypoint = { mapID = 46, x = 0.6500, y = 0.5000 } },
 	  },
 	},
-	{ name = "Jimothy",                           kind = "mystery", guideURL = "https://www.wowhead.com/npc=273775/jimothy",
+	{ name = "J'imothy",                          kind = "mystery", guideURL = "https://www.wowhead.com/npc=273775/jimothy",
 	  source = "Confirmed by Blizzard as a secret pet in 12.1. Not solved yet — no obtain method is known.",
 	  steps = {
 	    { label = "Not solved yet — nothing to do",
-	      note = "Blizzard announced Jimothy the raccoon as a secret pet coming with the Curse of Ula'tek content update. The model is on the PTR but has no pet journal entry, which is normal for a secret: they are deliberately kept off the PTR so they are not spoiled before players find them. The building shown in Blizzard's teaser resembles the architecture in Zul'Aman, one of Midnight's levelling zones, which is the community's current best guess for where to look. Follow the Secret Finding Discord for progress." },
+	      note = "Blizzard announced J'imothy the raccoon as a secret pet in the Curse of Ula'tek content update, and the pet now has a journal entry on live, so it is obtainable — but nobody has published how. The building shown in Blizzard's teaser resembles the architecture in Zul'Aman, one of Midnight's levelling zones, which is the community's current best guess for where to look. Follow the Secret Finding Discord for progress." },
 	  },
 	},
 
