@@ -184,7 +184,7 @@ function SC:BuildGuidesPanel(frame, L)
 		-- (Kosumoth)".
 		if Matches(SC:GetEntryName(entry), term) then return true end
 		if Matches(entry.name, term) then return true end
-		if Matches(entry.kind, term) then return true end
+		-- entry.kind is deliberately not searched here; see KindForTerm.
 		if Matches(entry.source, term) then return true end
 		if Matches(entry.desc, term) then return true end
 		if Matches(entry.partOf, term) then return true end
@@ -204,15 +204,63 @@ function SC:BuildGuidesPanel(frame, L)
 		return false
 	end
 
+	-- Maps a search term that IS a type name onto that type.
+	--
+	-- entry.kind used to be searched as ordinary text, which meant "pet" matched
+	-- every entry whose notes happened to mention a pet, and matched the kind
+	-- itself only as an English substring -- so a Russian client got neither
+	-- behaviour. Typing a type name is a request to see that type, not to find
+	-- the word, so an exact match selects it: "pet", "pets" and the player's own
+	-- localised "Питомцы" all filter to pets, while "petri" still searches text.
+	--
+	-- Built on first use rather than at file scope: the locale table is
+	-- populated by then, and most sessions never search at all.
+	local kindTerms
+	local function KindForTerm(term)
+		if not kindTerms then
+			kindTerms = {}
+			local KIND_KEYS = {
+				mount       = { "KIND_MOUNT",       "KIND_MOUNTS" },
+				pet         = { "KIND_PET",         "KIND_PETS" },
+				toy         = { "KIND_TOY",         "KIND_TOYS" },
+				achievement = { "KIND_ACHIEVEMENT", "KIND_ACHIEVEMENTS" },
+				quest       = { "KIND_QUEST",       "KIND_QUESTS" },
+				transmog    = { "KIND_TRANSMOG",    "KIND_TRANSMOGS" },
+				housing     = { "KIND_HOUSING",     "KIND_HOUSINGS" },
+				mystery     = { "KIND_MYSTERY",     "KIND_MYSTERIES" },
+			}
+			for kind, keys in pairs(KIND_KEYS) do
+				kindTerms[kind] = kind
+				kindTerms[kind .. "s"] = kind
+				for _, key in ipairs(keys) do
+					local label = L[key]
+					if type(label) == "string" and label ~= "" then
+						kindTerms[label:lower()] = kind
+					end
+				end
+			end
+			-- English plurals the "+s" rule gets wrong.
+			kindTerms["mysteries"] = "mystery"
+		end
+		return kindTerms[term]
+	end
+
 	local function Guides_ApplyFilter()
 		local entries = SC:GetFilteredEntries()
 		if guides_searchText == "" then
 			guides_entries = entries
 			return
 		end
+		local searchKind = KindForTerm(guides_searchText)
 		local matched = {}
 		for _, entry in ipairs(entries) do
-			if EntryMatchesSearch(entry, guides_searchText) then
+			local hit
+			if searchKind then
+				hit = (entry.kind == searchKind)
+			else
+				hit = EntryMatchesSearch(entry, guides_searchText)
+			end
+			if hit then
 				matched[#matched + 1] = entry
 			end
 		end
