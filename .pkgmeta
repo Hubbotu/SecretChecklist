@@ -10,6 +10,9 @@ ignore:
   - .luacheckrc
   - .release
   - tools
+  # Store-page copy for CurseForge and Wago. Kept in the repo so it is version
+  # controlled and editable, but it is not part of the addon.
+  - docs
 
 license-output: LICENSE
 
