@@ -146,6 +146,8 @@ function SC:BuildGuidesPanel(frame, L)
 	local GP_PAD            = 8     -- general padding
 	local GP_ROW_H          = 44    -- height of each list row
 	local GP_TOP_DRP        = GP_PAD + 20 -- total drop from panel top to list pane start
+	local GP_SEARCH_H       = 20    -- search box height
+	local GP_SEARCH_DROP    = GP_SEARCH_H + 6 -- list content starts this far below the pane top
 
 	-- ---- per-panel state ----
 	local guides_entries    = {} -- filtered entry list
@@ -296,16 +298,24 @@ function SC:BuildGuidesPanel(frame, L)
 	listPane:SetPoint("BOTTOMLEFT", guidesPanel, "BOTTOMLEFT", GP_PAD, GP_PAD)
 	listPane:SetWidth(GP_LEFT_W)
 
-	-- Search box, in the strip above the list.
+	-- Search box, at the top of the list column.
 	--
-	-- 52 entries in a fixed-height list with no way to jump to one: finding
-	-- "Uuna" meant scrolling and reading. SearchBoxTemplate gives the magnifier,
-	-- the placeholder and the clear button for free, and matches the search boxes
-	-- in Blizzard's own journals.
+	-- Entries in a fixed-height list with no way to jump to one: finding "Uuna"
+	-- meant scrolling and reading. SearchBoxTemplate gives the magnifier, the
+	-- placeholder and the clear button for free, and matches the search boxes in
+	-- Blizzard's own journals.
+	--
+	-- It sits INSIDE the list pane. It used to be anchored above it, in the strip
+	-- between the panel top and the list -- which is the strip the shared
+	-- progress counters live in ("40 / 54 Secrets" is drawn from the left there)
+	-- and the strip PortraitFrameTemplate draws its circle over. So on the
+	-- Default theme the counter text showed through the box and the portrait
+	-- covered its left end. EllesmereUI and ElvUI hid the collision rather than
+	-- avoiding it: both fade the portrait to alpha 0.
 	local searchBox = CreateFrame("EditBox", nil, guidesPanel, "SearchBoxTemplate")
-	searchBox:SetPoint("BOTTOMLEFT", listPane, "TOPLEFT", 4, 2)
-	searchBox:SetPoint("BOTTOMRIGHT", listPane, "TOPRIGHT", 0, 2)
-	searchBox:SetHeight(20)
+	searchBox:SetPoint("TOPLEFT", listPane, "TOPLEFT", 4, -2)
+	searchBox:SetPoint("TOPRIGHT", listPane, "TOPRIGHT", 0, -2)
+	searchBox:SetHeight(GP_SEARCH_H)
 	-- Never steal keyboard focus when the tab opens.
 	searchBox:SetAutoFocus(false)
 	searchBox:SetScript("OnTextChanged", function(self)
@@ -329,7 +339,7 @@ function SC:BuildGuidesPanel(frame, L)
 
 	-- ScrollFrame: clips the list rows and handles vertical scrolling
 	scrollFrame = CreateFrame("ScrollFrame", nil, listPane)
-	scrollFrame:SetPoint("TOPLEFT", listPane, "TOPLEFT", 0, -GP_PAD)
+	scrollFrame:SetPoint("TOPLEFT", listPane, "TOPLEFT", 0, -GP_SEARCH_DROP)
 	scrollFrame:SetPoint("BOTTOMRIGHT", listPane, "BOTTOMRIGHT", 0, 0)
 
 	-- Export top-right of listPane so SwitchTab can anchor FilterDropdown here
@@ -345,7 +355,9 @@ function SC:BuildGuidesPanel(frame, L)
 	scrollBar = CreateFrame("Slider", nil, guidesPanel)
 	scrollBar:SetOrientation("VERTICAL")
 	scrollBar:SetWidth(6)
-	scrollBar:SetPoint("TOPLEFT", listPane, "TOPRIGHT", 4, -16)
+	-- Top follows the scroll area, not the pane, so the bar does not run up
+	-- alongside the search box.
+	scrollBar:SetPoint("TOPLEFT", listPane, "TOPRIGHT", 4, -(GP_SEARCH_DROP + 8))
 	scrollBar:SetPoint("BOTTOMLEFT", listPane, "BOTTOMRIGHT", 4, 16)
 	scrollBar:SetMinMaxValues(0, 0)
 	scrollBar:SetValueStep(GP_ROW_H)
