@@ -24,7 +24,7 @@ A World of Warcraft addon that helps you track and check your progress on secret
 - **Search**: Find any secret by name, zone, or anything mentioned in its steps — searching "Kosumoth" or "Tazavesh" works as well as searching the item name
 - **Progress Steps**: Step-by-step walkthrough per secret with click-to-waypoint support (via TomTom or built-in arrow)
 - **3D Model Viewer**: Previews mounts, pets, transmog worn on your character, housing items, and weapons in a live model scene
-- **Click-to-Navigate**: Click any icon in the Overview to jump directly to its Guides entry; Ctrl+Click inserts an item or achievement link into your active chat box
+- **Click-to-Navigate**: Click any icon in the Overview to jump directly to its Guides entry; Shift+Click (or Ctrl+Click) inserts an item or achievement link into your active chat box
 - **Mystery Category**: Track community secrets still being investigated (e.g. active discoveries from the Secret Finding Discord)
 - **Custom Lists**: Easily edit the list to track the secrets you want
 - **Pre-Configured**: Comes with 54 secrets ready to track
@@ -62,7 +62,7 @@ Both `/secrets` and `/secretchecklist` work as aliases:
 | `/secrets help` | List these commands |
 
 - **Click an overview icon** to jump directly to that entry's full guide in the Guides tab
-- **Ctrl+Click an overview icon** to insert an item or achievement link into your active chat box
+- **Shift+Click an overview icon** to insert an item or achievement link into your active chat box (Ctrl+Click also works)
 
 ### Using Filters
 

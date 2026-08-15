@@ -318,8 +318,14 @@ function SC:BuildOverviewPanel(frame, L)
 		button:SetScript("OnClick", function(self)
 			if not self.entry then return end
 			local entry = self.entry
-			if IsControlKeyDown() then
-				-- Ctrl+Click: insert an item/achievement link into the active chat box
+			-- Shift-click is what inserts a link everywhere else in the game, and
+			-- it is what the Guides substeps use, so honour it here too --
+			-- IsModifiedClick reads the player's own CHATLINK binding rather than
+			-- assuming shift. Ctrl stays supported because it is what this button
+			-- has always used and what the README documents; dropping it would
+			-- break the habit of everyone already using it.
+			if IsModifiedClick("CHATLINK") or IsControlKeyDown() then
+				-- Insert an item/achievement link into the active chat box
 				local link
 				if entry.itemID then
 					link = select(2, C_Item.GetItemInfo(entry.itemID))

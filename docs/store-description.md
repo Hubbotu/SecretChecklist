@@ -37,7 +37,7 @@ Click the minimap button, or type `/secrets`.
 | `/secrets help` | List every command |
 
 - **Click any icon** in the Overview to jump straight to its guide
-- **Ctrl+click** an icon to link the item or achievement into chat
+- **Shift+click** an icon to link the item or achievement into chat
 - **Filter** by status and by type — the menu stays open while you tick things
 - Your filters, window position, theme and minimap button are remembered between sessions and across characters
 
