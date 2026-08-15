@@ -44,8 +44,14 @@ SC.entries = {
 	  },
 	},
 	{ name = "Crimson Tidestallion",                         kind = "mount", mindSeeker = true, itemID = 169202, guideURL = "https://warcraft-secrets.com/guides/mrrls-secret-stash",
+	  -- Mrrl stocks the mount on no fixed schedule, and the trading chain that
+	  -- pays for it is built from items that expire after 24 hours. Watched so
+	  -- opening any merchant in Nazjatar reports whether it is listed today.
+	  -- The cape is what makes the special stock visible at all, so a check
+	  -- without it says nothing and has to be called out as such.
+	  vendorWatch = { mapID = 1355, requiresEquipped = 169489 },
 	  steps = {
-	    { label = "Unlock Mrrl — escort quest 'A Safer Place'",       questID = 55983, note = "Nazjatar — pick up 'A Safer Place' and escort Mrrl to Newhome (Horde) or Mezzamere (Alliance). Follow-up 'No Backs' has you buy one item from each of the 4 murloc traders.",
+	    { label = "Unlock Mrrl — escort quest 'A Safer Place'",       questIDs = { 55983, 55530 }, note = "Nazjatar — pick up 'A Safer Place' and escort Mrrl to Newhome (Horde) or Mezzamere (Alliance). Follow-up 'No Backs' has you buy one item from each of the 4 murloc traders.",
 	      factionWaypoint = { horde = { mapID = 1355, x = 0.480, y = 0.450 }, alliance = { mapID = 1355, x = 0.340, y = 0.660 } } },
 	    { label = "Get Azsh'ari Stormsurger Cape (Benthic cloak)",     itemID = 169489, note = "Nazjatar — reward from world quests/rares, or buy a Benthic Cloak (5 Prismatic Manapearls) from Finder Palta/Artisan Itanu and hope for the Stormsurger Cape. Equip it to see traders' Special Stocks." },
 	    { label = "Get Hungry Herald's Tentacle Taco from Murloco",    itemID = 170100, note = "Nazjatar @ 46.3, 32.6 — rare random event: save Murloco from Naga. Buy the Taco for 666g within 5 min (requires Azsh'ari Stormsurger Cape equipped).", waypoint = { mapID = 1355, x = 0.463, y = 0.326 } },

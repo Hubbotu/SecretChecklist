@@ -76,6 +76,10 @@ L["CMD_MINIMAP_HIDE"] = "Minimap button hidden."
 -- Vendor watch
 -- Shown after an item link: "<link> is for sale here right now."
 L["VENDOR_AVAILABLE_NOW"] = "is for sale here right now."
+-- %s is the item that must be worn, %s the secret it reveals.
+L["VENDOR_NEEDS_EQUIPPED"] = "Equip %s to see whether %s is stocked here."
+-- %s is the secret.
+L["VENDOR_NOT_STOCKED"] = "%s is not stocked here today."
 
 -- Status Messages
 L["DATA_NOT_READY"] = "Collection data not ready yet. Try opening Collections once."

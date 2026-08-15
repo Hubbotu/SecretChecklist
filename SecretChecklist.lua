@@ -689,11 +689,36 @@ end
 --   "done"    – quest flagged completed
 --   "ready"   – quest not done, but item(s) are in bags/bank
 --   "missing" – quest not done and item(s) not found
-function SC:GetStepStatus(step)
-	if step.questID and C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted then
-		if C_QuestLog.IsQuestFlaggedCompleted(step.questID) then
-			return "done"
+-- True when the step's quest, or any of them, is flagged complete.
+--
+-- questIDs (plural) is for one action that carries a different quest id per
+-- faction: Mrrl's "A Safer Place" escort is 55983 on Alliance and 55530 on
+-- Horde, so a Horde character who had done it still read as incomplete.
+-- Checking every id is simpler than resolving the player's faction, and it is
+-- also correct for a character who completed it on the other one.
+local function StepQuestCompleted(step)
+	if not (C_QuestLog and C_QuestLog.IsQuestFlaggedCompleted) then return false end
+	if step.questID and C_QuestLog.IsQuestFlaggedCompleted(step.questID) then
+		return true
+	end
+	if step.questIDs then
+		for _, id in ipairs(step.questIDs) do
+			if C_QuestLog.IsQuestFlaggedCompleted(id) then return true end
 		end
+	end
+	return false
+end
+
+-- Whether a step is quest-backed at all, however it names its quests. Several
+-- branches below read "has a quest" as "holding this item is a prerequisite
+-- rather than the completion", so they have to see questIDs too.
+local function StepHasQuest(step)
+	return step.questID ~= nil or step.questIDs ~= nil
+end
+
+function SC:GetStepStatus(step)
+	if StepQuestCompleted(step) then
+		return "done"
 	end
 	if step.criteriaID and step.achievementID and GetAchievementCriteriaInfoByID then
 		local _, _, criteriaCompleted = GetAchievementCriteriaInfoByID(step.achievementID, step.criteriaID)
@@ -741,7 +766,7 @@ function SC:GetStepStatus(step)
 		if have >= (step.count or 1) then
 			-- No questID means having the item IS completion (e.g. ring drops, climb rewards).
 			-- With a questID, the item is a prerequisite you're holding but haven't used yet → yellow.
-			if not step.questID then return "done" end
+			if not StepHasQuest(step) then return "done" end
 			return "ready"
 		end
 		-- Not in bags. That is not the same as not done: the item may have been
@@ -750,7 +775,7 @@ function SC:GetStepStatus(step)
 		if StepItemEquipped(step) then
 			-- Same rule as the in-bags branch above: with a questID the item is a
 			-- prerequisite being held, without one, having it is the completion.
-			if not step.questID then return "done" end
+			if not StepHasQuest(step) then return "done" end
 			return "ready"
 		end
 	end
