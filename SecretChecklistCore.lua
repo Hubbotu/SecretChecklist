@@ -417,7 +417,18 @@ local function Initialize()
 
 	-- Create filter dropdown in Lua (same path as wowhead button in TabGuides → guaranteed pill texture)
 	if not frame.FilterDropdown then
-		local fd = CreateFrame("DropdownButton", nil, frame, "WowStyle1FilterDropdownTemplate")
+		-- Parented to the Inset, not to the frame.
+		--
+		-- As a sibling of the Inset it landed on the same frame level (2 and 2),
+		-- and sibling frames at equal level merge into one draw order by layer --
+		-- so the Inset's background painted over the dropdown's pill while its
+		-- arrow and label, on higher layers, still drew. The button rendered as
+		-- bare text with an arrow and no chrome.
+		--
+		-- The Guide button in TabGuides uses this same template and never showed
+		-- the problem because it is a descendant of the Inset, so it is always
+		-- above it. This makes the filter button one too.
+		local fd = CreateFrame("DropdownButton", nil, frame.Inset, "WowStyle1FilterDropdownTemplate")
 		fd:SetSize(90, 22)
 		fd:SetPoint("TOPRIGHT", frame.Inset, "TOPRIGHT", -10, -8)
 		frame.FilterDropdown = fd
