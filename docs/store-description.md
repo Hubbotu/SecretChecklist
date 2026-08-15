@@ -1,3 +1,8 @@
+<!-- Store-page copy for both CurseForge and Wago; both render Markdown.
+     Paste into the project description on each site.
+     Written to stay correct between releases: no version numbers, no
+     secret counts, no changelog. If you edit it, update both sites. -->
+
 # SecretChecklist
 
 WoW is full of secrets that the game never tells you about — hidden mounts, pets, toys, achievements, appearances and housing decor, found by the community and documented nowhere in-game.
