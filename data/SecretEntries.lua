@@ -688,7 +688,10 @@ SC.entries = {
 	    { label = "Orb 12 – Footlocker", questID = 93765, note = "See Ensemble: Fashion of the Fanatic Felcyclist entry – Dusk Lily escort (Suramar -> Golk the Rumble, Azsuna) for Spare Key; then open Hidden Footlocker near 12th pillar in Karazhan Catacombs with Gift of Oddsight + Starry-Eyed Goggles", waypoint = { mapID = 46, x = 0.6500, y = 0.5000 } },
 	  },
 	},
-	{ name = "J'imothy",                          kind = "mystery", guideURL = "https://www.wowhead.com/npc=273775/jimothy",
+	-- Stays a mystery rather than a pet: the reward is identified but the method
+	-- is not, which is exactly what the category is for. The speciesID lets it
+	-- report collected anyway -- see checkers.mystery.
+	{ name = "J'imothy",                          kind = "mystery", speciesID = 5164, guideURL = "https://www.wowhead.com/npc=273775/jimothy",
 	  source = "Confirmed by Blizzard as a secret pet in 12.1. Not solved yet — no obtain method is known.",
 	  steps = {
 	    { label = "Not solved yet — nothing to do",

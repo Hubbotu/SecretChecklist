@@ -564,6 +564,15 @@ do
 	end
 
 	checkers.mystery = function(entry)
+		-- A mystery can have a known reward and an unknown method. J'imothy has a
+		-- pet journal entry -- so the game can say whether you own it -- while
+		-- nobody has published how it is obtained. Resolve the reward the way its
+		-- own kind would, so the entry reports collected the moment the community
+		-- cracks it, instead of waiting on steps that describe no actions.
+		if type(entry.speciesID) == "number" then
+			return checkers.pet(entry)
+		end
+
 		if entry.steps and #entry.steps > 0 then
 			local allDone = true
 			for _, step in ipairs(entry.steps) do
