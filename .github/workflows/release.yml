@@ -35,6 +35,22 @@ jobs:
         with:
           fetch-depth: 0  # gets entire git history, needed for automatic changelogs
 
+      # RELEASE_NOTES.md is what CurseForge and Wago show as the notes for this
+      # upload, and it holds only the version being released. Nothing else reads
+      # it, so a forgotten rewrite would publish the PREVIOUS release's notes --
+      # silently, and to three places at once. Fail here instead: a red run is
+      # cheap, an unpublish is not.
+      - name: Check RELEASE_NOTES.md matches the tag
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          heading="$(sed -n 's/^# *//p' RELEASE_NOTES.md | head -1)"
+          heading="${heading#v}"
+          if [ "$heading" != "$tag" ]; then
+            echo "::error file=RELEASE_NOTES.md::Headed '$heading' but the tag is '$tag'. Rewrite RELEASE_NOTES.md for $tag, then re-tag."
+            exit 1
+          fi
+          echo "RELEASE_NOTES.md is headed '$heading', matching tag '$tag'."
+
       # once cloned, we just run the GitHub Action
       - name: Package and release
         uses: BigWigsMods/packager@v2

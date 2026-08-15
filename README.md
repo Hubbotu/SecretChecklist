@@ -144,6 +144,27 @@ Pull requests with a new or improved locale are very welcome.
 See [CHANGELOG.md](CHANGELOG.md). Per-release notes are also on the
 [releases page](https://github.com/rousseauxy/SecretChecklist/releases).
 
+## Releasing
+
+Pushing a tag is the whole release. `release.yml` runs the BigWigs packager,
+which publishes to GitHub, CurseForge and Wago in one go — it takes about ten
+seconds end to end, and cancelling the run afterwards does not unpublish
+anything. Treat `git push origin <tag>` as the irreversible step.
+
+Before tagging:
+
+1. **Rewrite `RELEASE_NOTES.md`.** It holds only the version being released and
+   is what CurseForge and Wago show as that upload's notes. `CHANGELOG.md` is
+   the cumulative history and is no longer in that path — if it were, every
+   release page would repeat every earlier release underneath it. CI fails the
+   release when the heading does not match the tag, so a forgotten rewrite is
+   caught rather than published.
+2. **Add the matching `CHANGELOG.md` entry**, in the same commit.
+3. **Tag without a `v` prefix.** 1.x used `v1.9.11`; 2.0.0 onward uses `2.0.6`.
+   The tag becomes the addon's version string verbatim, so mixing the two
+   produces `## Version: v2.0.4` in the packaged `.toc`.
+4. **Annotate the tag** (`git tag -a`) — the packager requires it.
+
 ## Credits & References
 
 The transmog 3D model viewer logic (armor display on player character with slot zoom and camera handling) is based on the implementation from **[AppearanceTooltip](https://www.curseforge.com/wow/addons/appearancetooltip)** by [Kemayo](https://www.curseforge.com/members/kemayo/projects). Specifically, the `DressUpModel` + `TryOn` + `Dress()` pattern and `Model_ApplyUICamera` usage were adapted from that addon's source.
