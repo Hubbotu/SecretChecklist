@@ -265,8 +265,13 @@ SwitchTab = function(tabID)
 		frame.FilterDropdown:SetShown(isOverview or isGuides)
 		frame.FilterDropdown:ClearAllPoints()
 		frame.FilterDropdown:SetPoint("TOPRIGHT", frame.Inset, "TOPRIGHT", -10, -8)
-		UpdateFilterButtonText()
+		-- Update() before the text, not after. UpdateFilterButtonText writes
+		-- FilterDropdown.Text directly, and Update() regenerates the button from
+		-- Blizzard's own menu state -- so running it second discarded the label
+		-- we had just set and left the button reading "Filter" with no count,
+		-- on a tab that did have filters applied.
 		frame.FilterDropdown:Update()
+		UpdateFilterButtonText()
 	end
 
 	-- Show/hide content panels
