@@ -1860,12 +1860,16 @@ function SC:BuildGuidesPanel(frame, L)
 		-- creation and looked identical whether it was scrolling every entry or
 		-- three search results. Searching narrows the list, so that is exactly
 		-- when a fixed thumb misleads most.
+		-- Half the strictly proportional height: a true-to-scale thumb reads as
+		-- a heavy block against a 6px bar, and the bar is a position indicator
+		-- here rather than something people drag much. 10px floor keeps it
+		-- grabbable on the longest lists.
 		local thumb = scrollBar:GetThumbTexture()
 		if thumb and maxScroll > 0 then
 			local trackH = scrollBar:GetHeight() or 0
 			if trackH > 0 and contentH > 0 then
-				local proportional = trackH * (visibleH / contentH)
-				thumb:SetHeight(math_max(20, math_min(trackH, proportional)))
+				local proportional = trackH * (visibleH / contentH) * 0.5
+				thumb:SetHeight(math_max(10, math_min(trackH, proportional)))
 			end
 		end
 
