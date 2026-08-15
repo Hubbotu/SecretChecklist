@@ -39,6 +39,9 @@ local DB_DEFAULTS = {
 	-- theme / themeUserSet are deliberately absent: nil is meaningful for both
 	-- (it is what the ElvUI / EllesmereUI auto-select checks for on first run).
 	tabFilters           = {},
+	-- itemID -> "YYYY-MM-DD" of the last time a tracked item was seen on a
+	-- vendor. See SecretChecklistVendor.lua.
+	vendorSeen           = {},
 }
 
 -- Kinds a saved filter may legitimately contain. Used to prune keys left behind

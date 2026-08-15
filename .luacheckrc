@@ -47,6 +47,7 @@ read_globals = {
 	-- C_* namespaces
 	"C_AddOns",
 	"C_ChatInfo",
+	"C_DateAndTime",
 	"C_HousingCatalog",
 	"C_Item",
 	"C_MajorFactions",
@@ -70,6 +71,8 @@ read_globals = {
 	"ButtonFrameTemplate_HideAttic",
 	"ChatEdit_InsertLink",
 	"CreateFrame",
+	"GetMerchantItemLink",
+	"GetMerchantNumItems",
 	"hooksecurefunc",
 	"IsModifiedClick",
 	"DEFAULT_CHAT_FRAME",

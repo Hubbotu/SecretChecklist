@@ -73,6 +73,10 @@ L["CMD_OPTIONS"] = "Opening settings..."
 L["CMD_MINIMAP_SHOW"] = "Minimap button shown."
 L["CMD_MINIMAP_HIDE"] = "Minimap button hidden."
 
+-- Vendor watch
+-- Shown after an item link: "<link> is for sale here right now."
+L["VENDOR_AVAILABLE_NOW"] = "is for sale here right now."
+
 -- Status Messages
 L["DATA_NOT_READY"] = "Collection data not ready yet. Try opening Collections once."
 L["UNKNOWN"] = "(unknown)"
