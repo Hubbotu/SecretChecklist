@@ -2,9 +2,9 @@
 
 A World of Warcraft addon that helps you track and check your progress on secret collectibles including mounts, pets, toys, achievements, transmog, quests, housing items, and other hidden content.
 
-<img width="1173" height="762" alt="cKXD4krAlE" src="https://github.com/user-attachments/assets/b4e4940b-c1d0-471d-9665-241c9bd2bdd5" />
-<img width="1164" height="753" alt="gL11bkA9ow" src="https://github.com/user-attachments/assets/945a9665-e563-492b-aae6-76336934e65b" />
-<img width="1042" height="783" alt="0PxHX4fTLx" src="https://github.com/user-attachments/assets/38035af6-5b34-47b6-966e-0f7895b3b885" />
+![Overview tab](https://github.com/user-attachments/assets/e752b2e7-075d-41ef-b74a-14d1027a32e8)
+![Guides tab](https://github.com/user-attachments/assets/8808e138-7a3d-4de9-ac0e-2846abf0217d)
+![EllesmereUI theme](https://github.com/user-attachments/assets/74a6cb6d-c402-470c-aabb-885791f35136)
 
 ## Download
 
