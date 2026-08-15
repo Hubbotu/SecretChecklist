@@ -27,7 +27,7 @@ A World of Warcraft addon that helps you track and check your progress on secret
 - **Click-to-Navigate**: Click any icon in the Overview to jump directly to its Guides entry; Ctrl+Click inserts an item or achievement link into your active chat box
 - **Mystery Category**: Track community secrets still being investigated (e.g. active discoveries from the Secret Finding Discord)
 - **Custom Lists**: Easily edit the list to track the secrets you want
-- **Pre-Configured**: Comes with 52 secrets ready to track
+- **Pre-Configured**: Comes with 54 secrets ready to track
 - **Live Requirement Checks**: Step progress automatically checks renown level, faction reputation, and Mind-Seeker secret count from the game API — shown inline as e.g. `(5 / 8)` when not yet complete
 - **Themes**: Default, ElvUI, and EllesmereUI looks, matching whichever UI you run
 - **Accessible Status Icons**: Collected and missing are marked with a checkmark and a cross, not colour alone
@@ -83,7 +83,7 @@ login, on every character:
 
 ## Tracked Secrets
 
-Comes pre-configured with **52 secret collectibles** across mounts, pets, toys, achievements, transmog, quests, housing, and mysteries — with more being added regularly.
+Comes pre-configured with **54 secret collectibles** across mounts, pets, toys, achievements, transmog, quests, housing, and mysteries — with more being added regularly.
 
 ## Beledar Orchestra Helper
 

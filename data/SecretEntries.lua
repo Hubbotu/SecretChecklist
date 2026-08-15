@@ -389,6 +389,20 @@ SC.entries = {
 	    { label = "Complete Tale of the Phoenix — claim Phoenix Wishwing", questID = 72798, note = "Waking Shores @ 16.2, 62.6 — bring 1× Phoenix Ash Talisman + 15× Smoldering Phoenix Ash + 20× Ash Feather to Tarjin the Blind and complete the quest.", waypoint = { mapID = 2022, x = 0.162, y = 0.626 } },
 	  },
 	},
+	-- TODO: speciesID unknown. The pet has no journal entry on the PTR (normal for
+	-- a secret), and no public source lists it. Until it is filled in, checkers.pet
+	-- returns "Pet missing speciesID" and the entry shows as unknown rather than
+	-- collected. Fill it from a character that owns the pet.
+	{ name = "Slitherfang",                                  kind = "pet",   itemID = 279197, guideURL = "https://www.wowhead.com/news/hidden-slitherfang-pet-found-by-wow-secret-finders-382439",
+	  source = "Needs a full group of five in Mythic Altar of Fangs — the ritual cannot be done solo or on a lower difficulty.",
+	  steps = {
+	    { label = "Enter Altar of Fangs on Mythic difficulty", note = "The ritual objects only appear on Mythic. All five players take part: one carries the reagent, the other four each carry a charm." },
+	    { label = "After the first boss — one player takes the Ritual Reagent, the other four take a Reversal Charm", note = "The interactable objects sit around the first boss arena. There is one Ritual Reagent and four Reversal Charms; pick them all up before moving on." },
+	    { label = "After the second boss — clear the trash around the Ascendant Serpent, but do NOT touch the totems", note = "An Ascendant Serpent spawns with four totems around it. Touching a totem breaks the ritual." },
+	    { label = "Position one charm holder at each totem, and the reagent holder next to the serpent", note = "An extra action button appears once everyone is in place." },
+	    { label = "Use the extra action button — reagent first, then the four charms — then click Slitherfang", itemID = 279197, note = "Order matters: the Ritual Reagent player activates first, then the four Reversal Charm players. The Ascendant Serpent transforms into Slitherfang; click it to collect the pet." },
+	  },
+	},
 	{ name = "Tobias' Leash",                                kind = "pet",   mindSeeker = true, speciesID = 4263, itemID = 208151,  requires = {"Tricked-Out Thinking Cap", "Torch of Pyrreth"}, guideURL = "https://warcraft-secrets.com/guides/secrets-of-azeroth-world-event",
 	  steps = {
 	    { label = "Satchel 1 — Felwood",                              questID = 77288, note = "Felwood @ 42.2, 48.1 – bottom of the Bloodvenom Falls lake.",                                                                                                                                       waypoint = { mapID = 77,   x = 0.4220, y = 0.4810 } },
@@ -674,6 +688,13 @@ SC.entries = {
 	    { label = "Orb 10 – Oddsight Focus", itemID = 260533, count = 1, note = "Waking Shores Hissing Grotto @ 19.4, 36.7 – die and loot Secret Fish as ghost for Bubblefilled Flounder; feed to Hek the Hungry Hornswog; place Duck Egg at Valdrakken duck family @ 40.0, 78.0; find stealthed To'no at Forbidden Reach", waypoint = { mapID = 2022, x = 0.1940, y = 0.3670 } },
 	    { label = "Orb 11 – Radiant Singer", questID = 93764, note = "See Radiant Singer entry – Divine Flame of Beledar, Hallowfall @ 33.4, 54.6", waypoint = { mapID = 2215, x = 0.3340, y = 0.5460 } },
 	    { label = "Orb 12 – Footlocker", questID = 93765, note = "See Ensemble: Fashion of the Fanatic Felcyclist entry – Dusk Lily escort (Suramar -> Golk the Rumble, Azsuna) for Spare Key; then open Hidden Footlocker near 12th pillar in Karazhan Catacombs with Gift of Oddsight + Starry-Eyed Goggles", waypoint = { mapID = 46, x = 0.6500, y = 0.5000 } },
+	  },
+	},
+	{ name = "Jimothy",                           kind = "mystery", guideURL = "https://www.wowhead.com/npc=273775/jimothy",
+	  source = "Confirmed by Blizzard as a secret pet in 12.1. Not solved yet — no obtain method is known.",
+	  steps = {
+	    { label = "Not solved yet — nothing to do",
+	      note = "Blizzard announced Jimothy the raccoon as a secret pet coming with the Curse of Ula'tek content update. The model is on the PTR but has no pet journal entry, which is normal for a secret: they are deliberately kept off the PTR so they are not spoiled before players find them. The building shown in Blizzard's teaser resembles the architecture in Zul'Aman, one of Midnight's levelling zones, which is the community's current best guess for where to look. Follow the Secret Finding Discord for progress." },
 	  },
 	},
 
