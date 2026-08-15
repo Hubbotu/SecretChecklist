@@ -15,6 +15,11 @@ license-output: LICENSE
 
 # Release notes on CurseForge and Wago come from this file rather than from the
 # commit log, which is written for maintainers and not for players.
+#
+# It holds ONLY the version being released. It used to point at CHANGELOG.md,
+# which is cumulative -- so every release page carried every previous release's
+# notes underneath it, growing without bound. Rewrite this file for each
+# release; CHANGELOG.md keeps the full history for the repository.
 manual-changelog:
-  filename: CHANGELOG.md
+  filename: RELEASE_NOTES.md
   markup-type: markdown
