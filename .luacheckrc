@@ -70,6 +70,7 @@ read_globals = {
 	"ButtonFrameTemplate_HideAttic",
 	"ChatEdit_InsertLink",
 	"CreateFrame",
+	"IsModifiedClick",
 	"DEFAULT_CHAT_FRAME",
 	"GameTooltip",
 	"Minimap",

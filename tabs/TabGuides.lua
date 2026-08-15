@@ -858,6 +858,12 @@ function SC:BuildGuidesPanel(frame, L)
 			end
 		end)
 		itemBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+		itemBtn:RegisterForClicks("LeftButtonUp")
+		itemBtn:SetScript("OnClick", function(self)
+			if self.itemLink and IsModifiedClick("CHATLINK") then
+				ChatEdit_InsertLink(self.itemLink)
+			end
+		end)
 		itemBtn:Hide()
 		np.itemBtn = itemBtn
 
@@ -948,6 +954,16 @@ function SC:BuildGuidesPanel(frame, L)
 				end
 			end)
 			sr:SetScript("OnLeave", function() GameTooltip:Hide() end)
+			-- Shift-click puts the item in chat, the way shift-clicking a link
+			-- anywhere else in the game does. The row shows the authored label
+			-- rather than a real hyperlink, so that behaviour has to be wired by
+			-- hand; without this the item is hoverable but not shareable.
+			sr:RegisterForClicks("LeftButtonUp")
+			sr:SetScript("OnClick", function(self)
+				if self.itemLink and IsModifiedClick("CHATLINK") then
+					ChatEdit_InsertLink(self.itemLink)
+				end
+			end)
 			sr:Hide()
 			return sr
 		end
@@ -1466,7 +1482,17 @@ function SC:BuildGuidesPanel(frame, L)
 						sr.lbl:SetTextColor(0.80, 0.80, 0.80)
 					end
 					if sub.itemID then
-						local _, itemLink = C_Item.GetItemInfo(sub.itemID)
+						local _, itemLink, quality = C_Item.GetItemInfo(sub.itemID)
+						-- Quality colour, but only on rows that are neither done
+						-- nor ready. Those two states own the label colour -- grey
+						-- for done, gold for ready -- and they say something the
+						-- player needs more often than an item's rarity does. The
+						-- status glyph beside the row carries it either way, so
+						-- nothing is lost by leaving those two alone.
+						if not srDone and not srReady and quality and ITEM_QUALITY_COLORS then
+							local qc = ITEM_QUALITY_COLORS[quality]
+							if qc then sr.lbl:SetTextColor(qc.r, qc.g, qc.b) end
+						end
 						-- The authored label wins over the item link.
 						--
 						-- This used to be `itemLink or label`, which made the text
