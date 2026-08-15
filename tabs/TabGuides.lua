@@ -1483,15 +1483,23 @@ function SC:BuildGuidesPanel(frame, L)
 					end
 					if sub.itemID then
 						local _, itemLink, quality = C_Item.GetItemInfo(sub.itemID)
-						-- Quality colour, but only on rows that are neither done
-						-- nor ready. Those two states own the label colour -- grey
-						-- for done, gold for ready -- and they say something the
-						-- player needs more often than an item's rarity does. The
-						-- status glyph beside the row carries it either way, so
-						-- nothing is lost by leaving those two alone.
-						if not srDone and not srReady and quality and ITEM_QUALITY_COLORS then
+						-- Quality colour on every state except "ready".
+						--
+						-- This first excluded done and ready rows so their grey and
+						-- gold could carry status. In practice most substeps on a
+						-- collected secret are done, so the colour was almost never
+						-- visible. Done rows are dimmed to half instead: still
+						-- clearly finished, still recognisably the item's colour.
+						--
+						-- Ready keeps its gold. That one means "you can do this
+						-- now", which is worth more than knowing the item is rare,
+						-- and it is the only row of its kind on screen.
+						if quality and not srReady and ITEM_QUALITY_COLORS then
 							local qc = ITEM_QUALITY_COLORS[quality]
-							if qc then sr.lbl:SetTextColor(qc.r, qc.g, qc.b) end
+							if qc then
+								local dim = srDone and 0.5 or 1
+								sr.lbl:SetTextColor(qc.r * dim, qc.g * dim, qc.b * dim)
+							end
 						end
 						-- The authored label wins over the item link.
 						--

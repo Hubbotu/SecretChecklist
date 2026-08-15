@@ -603,6 +603,18 @@ local function Initialize()
 			OnFilterChanged()
 		end)
 
+		-- Reapply our label after any Blizzard-side regeneration.
+		--
+		-- UpdateFilterButtonText writes FilterDropdown.Text directly, and the
+		-- dropdown rewrites that text whenever it updates itself -- including
+		-- once on its own, after this setup runs, when the frame is first shown.
+		-- That is why the "(n)" count was missing until you switched tabs: the
+		-- init-time call was correct and then immediately overwritten.
+		--
+		-- Hooking Update removes the ordering question altogether, rather than
+		-- moving our call around and hoping nothing else regenerates the button.
+		hooksecurefunc(frame.FilterDropdown, "Update", UpdateFilterButtonText)
+
 		UpdateFilterButtonText()
 	end
 
