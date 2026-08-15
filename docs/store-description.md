@@ -54,7 +54,7 @@ The Radiant Singer secret needs a 40-player raid performing a set sequence of em
 
 - Matches your UI: Default, ElvUI or EllesmereUI, following your accent colour, window style and font
 - Collected and missing use a checkmark and a cross, not colour alone
-- Available in 11 languages
+- Available in multiple languages — is yours missing or incomplete? [Help translate it](https://github.com/rousseauxy/SecretChecklist#translating); a partial translation is genuinely useful, anything unfinished just falls back to English
 
 ## Credits & References
 
@@ -66,7 +66,7 @@ The transmog 3D model viewer logic (armor display on your character with slot zo
 
 ## Code quality
 
-This addon was created with the assistance of GitHub Copilot and Claude AI. The code is:
+This addon was created with the assistance of Claude AI. The code is:
 
 - **Clean and performant** — optimised for minimal overhead and fast execution
 - **Global namespace safe** — free of unnecessary globals that pollute the WoW environment
