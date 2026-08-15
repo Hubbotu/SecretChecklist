@@ -1497,7 +1497,12 @@ function SC:BuildGuidesPanel(frame, L)
 						if quality and not srReady and ITEM_QUALITY_COLORS then
 							local qc = ITEM_QUALITY_COLORS[quality]
 							if qc then
-								local dim = srDone and 0.5 or 1
+								-- 0.7, not 0.5. Quality colours are already muted
+								-- -- common is grey, uncommon a soft green -- so
+								-- halving them lands somewhere barely legible. This
+								-- reads as done without making the row hard to
+								-- read; the green check carries the state anyway.
+								local dim = srDone and 0.7 or 1
 								sr.lbl:SetTextColor(qc.r * dim, qc.g * dim, qc.b * dim)
 							end
 						end

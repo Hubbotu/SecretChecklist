@@ -4,7 +4,6 @@ local math_max = math.max
 local math_cos, math_sin, math_atan2, math_deg, math_rad = math.cos, math.sin, math.atan2, math.deg, math.rad
 local tinsert = table.insert
 local table_sort = table.sort
-local string_format = string.format
 
 -- Kind sort order used by GetFilteredEntries; defined once at module level
 local kindOrder = { mount = 1, pet = 2, toy = 3, achievement = 4, transmog = 5, quest = 6, housing = 7, mystery = 8 }
@@ -158,20 +157,19 @@ local function GetFilteredEntries()
 	return filtered
 end
 
+-- The button reads "Filter", always.
+--
+-- It used to append a count of active filters, which measured the wrong thing:
+-- narrowing to a single type unchecks the other seven, so picking one type read
+-- "Filter (7)". A number that goes up as you narrow is worse than no number,
+-- and the dropdown already shows what is ticked the moment you open it.
+--
+-- L["FILTER_WITH_COUNT"] is deliberately left in the locale files. It is
+-- translated in ruRU already, and keeping it costs nothing if the count ever
+-- comes back in a form that counts something a player would recognise.
 local function UpdateFilterButtonText()
 	if not frame.FilterDropdown or not frame.FilterDropdown.Text then return end
-	local f = tabFilters[SC.currentTab]
-	if not f then return end
-	local count         = 0
-	local showCollected = f.showCollected ~= false
-	local showMissing   = f.showMissing ~= false
-	if showCollected ~= showMissing then count = count + 1 end
-	for _, enabled in pairs(f.kinds) do
-		if not enabled then count = count + 1 end
-	end
-	if f.mindSeekerOnly then count = count + 1 end
-	frame.FilterDropdown.Text:SetText(count > 0 and string_format(L["FILTER_WITH_COUNT"] or "Filter (%d)", count) or
-	L["FILTER"] or "Filter")
+	frame.FilterDropdown.Text:SetText(L["FILTER"] or "Filter")
 end
 
 -- Expose filtered entries to tab panel files
