@@ -68,6 +68,29 @@ end
 -- SKIN APPLICATION
 -- ==============================================
 
+-- One physical pixel, in the coordinate space of the frame it is drawn in.
+--
+-- The theme draws a few hairlines itself. At a UI scale that is not EUI's
+-- "perfect" scale, a width of 1 is not one screen pixel, so those lines round
+-- inconsistently -- some land on 1px, some on 2, some vanish. PP.perfect is
+-- 768 / physical screen height; dividing by the frame's own effective scale
+-- converts it into that frame's units.
+--
+-- PP.mult is deliberately only the fallback: it is PP.perfect over UIParent's
+-- scale, which is right for the options panel and wrong for a frame with a
+-- scale of its own.
+--
+-- EllesmereUI.PP is a public entry point but is not in SKINNING_API.md, so
+-- every read is guarded and the whole thing degrades to 1.
+local function OnePixel(frame)
+	local pp = EllesmereUI and EllesmereUI.PP
+	local scale = frame and frame.GetEffectiveScale and frame:GetEffectiveScale()
+	if pp and pp.perfect and scale and scale > 0 then
+		return pp.perfect / scale
+	end
+	return (pp and pp.mult) or 1
+end
+
 local function ApplySkin()
 	local S = SC._euiSkin
 	if not S then return end
@@ -157,6 +180,13 @@ local function ApplySkin()
 		end
 	end
 
+	-- ---- Divider ----
+	-- Drawn by the Guides panel at a fixed width; narrowed here to a single
+	-- screen pixel so it matches how EllesmereUI draws its own hairlines.
+	if SC.themeTargets and SC.themeTargets.divider then
+		SC.themeTargets.divider:SetWidth(OnePixel(SC.themeTargets.divider))
+	end
+
 	-- ---- Toasts ----
 	if SC.RefreshAlertTheme then SC:RefreshAlertTheme() end
 
@@ -235,6 +265,12 @@ SC:RegisterTheme(THEME_KEY, {
 		S.SquareIcon(button.iconTextureUncollected)
 
 		local border = button:GetIconBorder()
+		-- Re-declared at a true one-pixel edge. The border is created with
+		-- edgeSize = 1, which is one UI unit rather than one screen pixel, so at a
+		-- non-perfect UI scale the gold ring rounds to two pixels on some icons and
+		-- to none on others. SetBackdrop drops the current border colour, so the
+		-- colour below has to follow it rather than precede it.
+		border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = OnePixel(border) })
 		if isCollected then
 			local gold = SC.COLLECTED_GOLD
 			border:SetBackdropBorderColor(gold[1], gold[2], gold[3], 1)
