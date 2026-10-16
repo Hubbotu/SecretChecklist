@@ -286,7 +286,25 @@ SC:RegisterTheme(THEME_KEY, {
 	-- caller sets before dispatching here.
 	StyleTab = function(button, isActive)
 		if button._euiSkinned and SC._euiSkin then
-			SC._euiSkin.Tab(button)
+			local S = SC._euiSkin
+			S.Tab(button)
+			-- State the selection rather than letting EUI infer it.
+			--
+			-- Without this, EUI resolves selection itself, and one of the
+			-- branches it tries first is "parent.selectedTabID == tab.tabID".
+			-- Our buttons DO carry a tabID -- a string, for our own switching --
+			-- so we qualify for that branch the moment anything puts a
+			-- selectedTabID on the parent frame, and a string would never match
+			-- it: every tab would then draw unselected. It only works today
+			-- because our frame happens not to have that field.
+			--
+			-- SetTabSelection writes an override that is checked ahead of all of
+			-- it, which is what EUI documents for addons that switch their own
+			-- tabs. Guarded: it arrived in apiVersion 2 and this theme still has
+			-- to run against 1.
+			if S.SetTabSelection then
+				S.SetTabSelection(button, isActive and true or false)
+			end
 			return
 		end
 		return SC.themes.Default.StyleTab(button, isActive)
