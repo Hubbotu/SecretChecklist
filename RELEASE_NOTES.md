@@ -1,19 +1,20 @@
-# 2.0.8
-
-### New
-
-- **J'imothy has been solved, and the guide is in.** Find an Ensorcelled Cryptid
-  in Silvermoon City, strip its 100 stacks of Barrier Integrity while dodging the
-  arcane circles, then free him and take the Stubby Whistle. Three confirmed
-  spawn points are on the first step. Anyone can help strip stacks, and everyone
-  present gets a whistle.
-- **The guides are being translated into Russian.** A first pass covering around
-  300 of the step instructions is in, thanks again to ZamestoTV. Anything not yet
-  translated still reads in English, so nothing is missing in the meantime.
+# 2.0.9
 
 ### Fixed
 
-- Under EllesmereUI, the gold border on collected icons is drawn a single screen
-  pixel wide, so it no longer varies from icon to icon at some UI scales.
+- **Updated for patch 12.1.5**, so the addon is no longer flagged out of date.
+  12.1.7 on the PTR is supported too.
+
+### New
+
+- **The Russian guides are nearly complete** — 739 of 815 step instructions, up
+  from around 300. Thanks again to ZamestoTV. Anything still untranslated reads
+  in English.
+
+### Under the hood
+
+- Under EllesmereUI, the addon now tells EUI which tab is selected rather than
+  letting it work that out. No visible change today; it prevents the tabs all
+  looking unselected if EUI's own tab handling shifts underneath us.
 
 Full history: https://github.com/rousseauxy/SecretChecklist/blob/main/CHANGELOG.md
