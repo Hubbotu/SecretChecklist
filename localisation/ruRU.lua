@@ -141,4 +141,12 @@ L["GUIDES_STYLE_SIDETABS_DESC"] = "Боковые вкладки в стиле �
 L["GUIDES_STYLE_HORIZONTAL"]      = "Современный"
 L["GUIDES_STYLE_HORIZONTAL_DESC"] = "Классическая горизонтальная панель вкладок «Инфо / Модель» внутри панели подробностей."
 
+-- Not yet translated. Uncomment and fill in; anything left commented falls
+-- back to the English shown after it.
+--
+-- Vendor watch (2.0.7). Shown when a merchant in a watched zone is open.
+-- L["VENDOR_AVAILABLE_NOW"]  = ""   -- "is for sale here right now."  (follows an item link)
+-- L["VENDOR_NEEDS_EQUIPPED"] = ""   -- "Equip %s to see whether %s is stocked here."
+-- L["VENDOR_NOT_STOCKED"]    = ""   -- "%s is not stocked here today."
+
 _G.SecretChecklistLocale = L

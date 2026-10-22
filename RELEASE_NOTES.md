@@ -1,20 +1,16 @@
-# 2.0.9
+# 2.1.0
 
-### Fixed
+### The guides are now fully available in Russian
 
-- **Updated for patch 12.1.5**, so the addon is no longer flagged out of date.
-  12.1.7 on the PTR is supported too.
+Every one of the 815 step instructions, notes and descriptions is translated —
+the walkthroughs, not just the buttons and menus. On a Russian client the whole
+addon now reads in Russian.
 
-### New
+That is months of work by **ZamestoTV**, who also translated the interface and
+reported most of the gaps that got fixed along the way. Thank you.
 
-- **The Russian guides are nearly complete** — 739 of 815 step instructions, up
-  from around 300. Thanks again to ZamestoTV. Anything still untranslated reads
-  in English.
-
-### Under the hood
-
-- Under EllesmereUI, the addon now tells EUI which tab is selected rather than
-  letting it work that out. No visible change today; it prevents the tabs all
-  looking unselected if EUI's own tab handling shifts underneath us.
+If you play in another language and fancy doing the same, the guide content is a
+single file and a partial translation is genuinely useful — anything unfinished
+simply falls back to English. See the README.
 
 Full history: https://github.com/rousseauxy/SecretChecklist/blob/main/CHANGELOG.md
